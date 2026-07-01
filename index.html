@@ -290,6 +290,7 @@
         <button id="omokGameLeaveBtn">나가기</button>
       </div>
       <div id="omokTurnBanner" class="turnBanner">연결 중...</div>
+      <p style="font-size:11px; color:#999; margin:0 0 8px; text-align:center;">렌주 룰 적용 · 흑돌만 3-3, 4-4, 6목 이상 금지 / 백돌은 제한 없음 / 흑돌 5목은 정확히 5개만</p>
       <div class="boardWrap"><div id="omokBoard" class="board"></div></div>
       <div id="omokResultBox" class="resultBox winBox hidden"><p class="title" id="omokResultText"></p><button id="omokPlayAgainBtn" style="margin-top:8px;">다시 하기</button></div>
       <div class="chatBox">
@@ -659,8 +660,11 @@ async function omokCreate(){
   for(let i=0;i<5;i++){
     const code=genCode();
     const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); }
-    const {error}=await supa.from('omok_games').insert({room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black',black_player:currentUser.username});
-    if(!error){ omokRoomCode=code; omokMyColor='black'; omokBoard=board; document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); omokSubscribeGame(); return; }
+    const myColor=Math.random()<0.5?'black':'white';
+    const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black'};
+    if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username;
+    const {error}=await supa.from('omok_games').insert(insertData);
+    if(!error){ omokRoomCode=code; omokMyColor=myColor; omokBoard=board; document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); omokSubscribeGame(); return; }
   }
   alert('방 생성 실패');
 }
@@ -672,8 +676,11 @@ async function omokJoin(){
   if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; }
   if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; }
   err.textContent='';
-  omokRoomCode=code; omokMyColor='white'; omokBoard=data.board;
-  await supa.from('omok_games').update({status:'active',white_player:currentUser.username,players:data.players.concat([currentUser.username])}).eq('room_code',code);
+  const myColor=data.black_player?'white':'black';
+  omokRoomCode=code; omokMyColor=myColor; omokBoard=data.board;
+  const updateData={status:'active',players:data.players.concat([currentUser.username])};
+  if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username;
+  await supa.from('omok_games').update(updateData).eq('room_code',code);
   omokSubscribeGame(); omokEnterGame(data);
 }
 
@@ -712,14 +719,24 @@ function omokRenderBoard(row){
   boardEl.style.gridTemplateColumns='repeat('+OMOK_SIZE+', 28px)';
   boardEl.innerHTML='';
   const isMyTurn=row.current_turn===omokMyColor&&row.status==='active';
+  const isBlackTurn=row.current_turn==='black';
   for(let r=0;r<OMOK_SIZE;r++){
     for(let c=0;c<OMOK_SIZE;c++){
       const cell=document.createElement('div'); cell.className='cell';
       const val=row.board[r][c];
       if(val){ const s=document.createElement('div'); s.className='stone '+val; cell.appendChild(s); }
-      else if(isMyTurn){
-        const rc=r, cc=c;
-        cell.addEventListener('click',function(){ omokPlaceStone(rc,cc,row); });
+      else {
+        // 금수 표시 (흑돌 차례일 때 모든 플레이어에게)
+        if(isBlackTurn && omokIsForbidden(row.board,r,c)){
+          const x=document.createElement('div');
+          x.style.cssText='width:12px;height:12px;position:relative;z-index:1;color:#c0392b;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;';
+          x.textContent='✕';
+          cell.appendChild(x);
+        }
+        if(isMyTurn){
+          const rc=r, cc=c;
+          cell.addEventListener('click',function(){ omokPlaceStone(rc,cc,row); });
+        }
       }
       boardEl.appendChild(cell);
     }
@@ -728,7 +745,14 @@ function omokRenderBoard(row){
 
 async function omokPlaceStone(r,c,row){
   if(row.board[r][c]) return;
-  const newBoard=row.board.map(function(row){ return row.slice(); });
+  // 흑돌 금수 검사
+  if(omokMyColor==='black'){
+    if(omokIsForbidden(row.board,r,c)){
+      alert('금수 위치예요! (3-3, 4-4, 장목 금지)');
+      return;
+    }
+  }
+  const newBoard=row.board.map(function(r){ return r.slice(); });
   newBoard[r][c]=omokMyColor;
   const won=omokCheckWin(newBoard,r,c,omokMyColor);
   const nextTurn=omokMyColor==='black'?'white':'black';
@@ -737,13 +761,67 @@ async function omokPlaceStone(r,c,row){
   await supa.from('omok_games').update(update).eq('room_code',omokRoomCode);
 }
 
+// 한 방향으로 연속된 같은 색 돌 수 반환
+function omokCountDir(board,r,c,dr,dc,color){
+  let count=0;
+  let nr=r+dr, nc=c+dc;
+  while(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color){ count++; nr+=dr; nc+=dc; }
+  return count;
+}
+
+// 열린 쪽 수 반환 (0,1,2)
+function omokOpenEnds(board,r,c,dr,dc,color){
+  let open=0;
+  // 정방향 끝 너머
+  let cnt=omokCountDir(board,r,c,dr,dc,color);
+  const er=r+dr*(cnt+1), ec=c+dc*(cnt+1);
+  if(er>=0&&er<OMOK_SIZE&&ec>=0&&ec<OMOK_SIZE&&board[er][ec]===null) open++;
+  // 역방향 끝 너머
+  let cnt2=omokCountDir(board,r,c,-dr,-dc,color);
+  const er2=r-dr*(cnt2+1), ec2=c-dc*(cnt2+1);
+  if(er2>=0&&er2<OMOK_SIZE&&ec2>=0&&ec2<OMOK_SIZE&&board[er2][ec2]===null) open++;
+  return open;
+}
+
+// 특정 방향 총 연속 수 (양방향 합산)
+function omokLineCount(board,r,c,dr,dc,color){
+  return 1 + omokCountDir(board,r,c,dr,dc,color) + omokCountDir(board,r,c,-dr,-dc,color);
+}
+
+// 금수 판정 (흑돌 전용)
+function omokIsForbidden(board,r,c){
+  const testBoard=board.map(function(row){ return row.slice(); });
+  testBoard[r][c]='black';
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  let openThrees=0, openFours=0;
+
+  for(const [dr,dc] of dirs){
+    const cnt=omokLineCount(testBoard,r,c,dr,dc,'black');
+    // 장목 (6목 이상) 금지
+    if(cnt>=6) return true;
+    // 열린 4 (4-4 금지용)
+    if(cnt===4){
+      const open=omokOpenEnds(testBoard,r,c,dr,dc,'black');
+      if(open>=1) openFours++;
+    }
+    // 열린 3 (3-3 금지용)
+    if(cnt===3){
+      const open=omokOpenEnds(testBoard,r,c,dr,dc,'black');
+      if(open===2) openThrees++;
+    }
+  }
+  if(openFours>=2) return true;  // 4-4 금수
+  if(openThrees>=2) return true; // 3-3 금수
+  return false;
+}
+
+// 승리 판정 (흑돌은 정확히 5목, 백돌은 5목 이상)
 function omokCheckWin(board,r,c,color){
   const dirs=[[0,1],[1,0],[1,1],[1,-1]];
   for(const [dr,dc] of dirs){
-    let count=1;
-    for(let i=1;i<5;i++){ const nr=r+dr*i,nc=c+dc*i; if(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color) count++; else break; }
-    for(let i=1;i<5;i++){ const nr=r-dr*i,nc=c-dc*i; if(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color) count++; else break; }
-    if(count>=5) return true;
+    const cnt=omokLineCount(board,r,c,dr,dc,color);
+    if(color==='black'){ if(cnt===5) return true; }
+    else { if(cnt>=5) return true; }
   }
   return false;
 }
@@ -779,8 +857,11 @@ function otInitBoard(){
 async function otCreate(){
   for(let i=0;i<5;i++){
     const code=genCode(); const board=otInitBoard();
-    const {error}=await supa.from('othello_games').insert({room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black',black_player:currentUser.username});
-    if(!error){ otRoomCode=code; otMyColor='black'; otBoard=board; document.getElementById('othelloWaitCode').textContent=code; otShowSub('othelloWaitScreen'); otSubscribeGame(); return; }
+    const myColor=Math.random()<0.5?'black':'white';
+    const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black'};
+    if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username;
+    const {error}=await supa.from('othello_games').insert(insertData);
+    if(!error){ otRoomCode=code; otMyColor=myColor; otBoard=board; document.getElementById('othelloWaitCode').textContent=code; otShowSub('othelloWaitScreen'); otSubscribeGame(); return; }
   }
   alert('방 생성 실패');
 }
@@ -791,8 +872,12 @@ async function otJoin(){
   const {data,error}=await supa.from('othello_games').select('*').eq('room_code',code).maybeSingle();
   if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; }
   if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; }
-  err.textContent=''; otRoomCode=code; otMyColor='white'; otBoard=data.board;
-  await supa.from('othello_games').update({status:'active',white_player:currentUser.username,players:data.players.concat([currentUser.username])}).eq('room_code',code);
+  err.textContent='';
+  const myColor=data.black_player?'white':'black';
+  otRoomCode=code; otMyColor=myColor; otBoard=data.board;
+  const updateData={status:'active',players:data.players.concat([currentUser.username])};
+  if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username;
+  await supa.from('othello_games').update(updateData).eq('room_code',code);
   otSubscribeGame(); otEnterGame(data);
 }
 
