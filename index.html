@@ -263,7 +263,7 @@ button:disabled { opacity:0.4; cursor:default; }
     <div id="omokTurnBanner" class="turnBanner">연결 중...</div>
     <p style="font-size:11px; color:#999; margin:0 0 6px; text-align:center;">렌주 룰 · 흑돌만 3-3·4-4·6목 이상 금지 / 백돌 제한 없음 / 흑돌 5목만 승리</p>
     <div class="boardWrap"><div id="omokBoard" class="omokGrid"></div></div>
-    <div id="omokPreviewInfo" class="hidden" style="margin-top:8px;">
+    <div id="omokPreviewInfo" class="hidden" style="margin-top:8px; text-align:center;">
       <button id="omokConfirmBtn" class="primary" style="width:50%; font-size:16px; padding:12px;">놓기 ✓</button>
     </div>
     <div id="omokResultBox" class="resultBox winBox hidden">
@@ -311,6 +311,9 @@ button:disabled { opacity:0.4; cursor:default; }
       <div class="scoreBox"><div class="othelloStone white" style="width:20px;height:20px;display:inline-block;border-radius:50%;vertical-align:middle;border:1px solid #aaa;"></div> <b id="whiteScore">2</b>개 <span id="whitePlayerName" style="font-size:12px;color:#999;"></span></div>
     </div>
     <div class="boardWrap"><div id="othelloBoard" class="othelloGrid"></div></div>
+    <div id="othelloPreviewInfo" class="hidden" style="margin-top:8px; text-align:center;">
+      <button id="othelloConfirmBtn" class="primary" style="width:50%; font-size:16px; padding:12px;">놓기 ✓</button>
+    </div>
     <div id="othelloResultBox" class="resultBox winBox hidden">
       <p class="title" id="othelloResultText"></p>
       <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
@@ -523,7 +526,7 @@ async function omokSendChat(){ const inp=document.getElementById('omokChatInput'
 /* ===== 오델로 ===== */
 const OT_SIZE=8;
 const OT_DIRS=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-let otRoomCode='',otMyColor='',otChannel=null,otChatChannel=null;
+let otRoomCode='',otMyColor='',otChannel=null,otChatChannel=null,otPreviewPos=null,otCurrentRow=null;
 
 function otShowSub(id){ ['othelloLobby','othelloJoinScreen','othelloWaitScreen','othelloGameScreen'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); }); }
 function enterOthello(){ showSection('othelloSection'); otShowSub('othelloLobby'); }
@@ -531,8 +534,8 @@ function otInitBoard(){ const b=[]; for(let i=0;i<OT_SIZE;i++){ b.push([]); for(
 async function otCreate(){ for(let i=0;i<5;i++){ const code=genCode(); const board=otInitBoard(); const myColor=Math.random()<0.5?'black':'white'; const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black'}; if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username; const {error}=await supa.from('othello_games').insert(insertData); if(!error){ otRoomCode=code; otMyColor=myColor; document.getElementById('othelloWaitCode').textContent=code; otShowSub('othelloWaitScreen'); otSubscribeGame(); return; } } alert('방 생성 실패'); }
 async function otJoin(){ const code=document.getElementById('othelloJoinCode').value.trim(); const err=document.getElementById('othelloJoinErr'); if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; } const {data,error}=await supa.from('othello_games').select('*').eq('room_code',code).maybeSingle(); if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; } if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; } err.textContent=''; const myColor=data.black_player?'white':'black'; otRoomCode=code; otMyColor=myColor; const updateData={status:'active',players:data.players.concat([currentUser.username])}; if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username; await supa.from('othello_games').update(updateData).eq('room_code',code); otSubscribeGame(); const {data:fresh}=await supa.from('othello_games').select('*').eq('room_code',code).single(); otEnterGame(fresh||data); }
 function otSubscribeGame(){ if(otChannel) supa.removeChannel(otChannel); otChannel=addChannel(supa.channel('othello-'+otRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'othello_games',filter:'room_code=eq.'+otRoomCode},function(p){ otHandleUpdate(p.new); }).subscribe()); }
-function otHandleUpdate(row){ if(row.status==='waiting') return; if(!document.getElementById('othelloWaitScreen').classList.contains('hidden')){ otEnterGame(row); return; } if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){ const players=[row.black_player,row.white_player].filter(Boolean); if(players.every(function(p){ return row.rematch_ready.includes(p); })){ const isAllNull=row.board.every(function(r){ return r.every(function(c){ return c===null; }); }); if(isAllNull){ if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); } } } otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); if(row.status==='finished') otShowResult(row); }
-function otEnterGame(row){ document.getElementById('othelloGameCode').textContent=otRoomCode; otShowSub('othelloGameScreen'); saveGameSession('othello',otRoomCode,otMyColor); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); otLoadChat(); otSubscribeChat(); if(row.status==='finished') otShowResult(row); }
+function otHandleUpdate(row){ otCurrentRow=row; if(row.status==='waiting') return; if(!document.getElementById('othelloWaitScreen').classList.contains('hidden')){ otEnterGame(row); return; } if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){ const players=[row.black_player,row.white_player].filter(Boolean); if(players.every(function(p){ return row.rematch_ready.includes(p); })){ const isAllNull=row.board.every(function(r){ return r.every(function(c){ return c===null; }); }); if(isAllNull){ if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); } } } otPreviewPos=null; document.getElementById('othelloPreviewInfo').classList.add('hidden'); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); if(row.status==='finished') otShowResult(row); }
+function otEnterGame(row){ otCurrentRow=row; document.getElementById('othelloGameCode').textContent=otRoomCode; otShowSub('othelloGameScreen'); saveGameSession('othello',otRoomCode,otMyColor); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); otLoadChat(); otSubscribeChat(); if(row.status==='finished') otShowResult(row); }
 function otUpdateBanner(row){ if(row.status==='finished'){ document.getElementById('othelloTurnBanner').textContent='게임 종료'; return; } const isMyTurn=row.current_turn===otMyColor; const curName=row.current_turn==='black'?(row.black_player||'흑'):(row.white_player||'백'); document.getElementById('othelloTurnBanner').textContent=isMyTurn?'내 차례예요!':(curName+'님의 차례'); const colorLabel=otMyColor==='black'?'흑돌 ⚫':'백돌 ⚪'; document.getElementById('othelloMyColorNote').textContent='내 돌: '+colorLabel; }
 function otUpdateScore(row){ let black=0,white=0; for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++){ if(row.board[r][c]==='black') black++; else if(row.board[r][c]==='white') white++; } document.getElementById('blackScore').textContent=black; document.getElementById('whiteScore').textContent=white; const bName=row.black_player||(otMyColor==='black'?currentUser.username:'?'); const wName=row.white_player||(otMyColor==='white'?currentUser.username:'?'); document.getElementById('blackPlayerName').textContent='('+bName+(bName===currentUser.username?' · 나':'')+')'+(bName===currentUser.username?' ★':''); document.getElementById('whitePlayerName').textContent='('+wName+(wName===currentUser.username?' · 나':'')+')'+(wName===currentUser.username?' ★':''); }
 function otGetFlips(board,r,c,color){ const opp=color==='black'?'white':'black'; const flips=[]; for(const [dr,dc] of OT_DIRS){ const line=[]; let nr=r+dr,nc=c+dc; while(nr>=0&&nr<OT_SIZE&&nc>=0&&nc<OT_SIZE&&board[nr][nc]===opp){ line.push([nr,nc]); nr+=dr; nc+=dc; } if(line.length>0&&nr>=0&&nr<OT_SIZE&&nc>=0&&nc<OT_SIZE&&board[nr][nc]===color) flips.push(...line); } return flips; }
@@ -548,15 +551,29 @@ function otRenderBoard(row){
     for(let c=0;c<OT_SIZE;c++){
       const cell=document.createElement('div'); cell.className='othelloCell';
       const val=row.board[r][c];
-      if(val){ const s=document.createElement('div'); s.className='othelloStone '+val; cell.appendChild(s); }
-      else if(validSet.has(r+','+c)){ cell.classList.add('hint'); const rc=r,cc=c; cell.addEventListener('click',function(){ otPlaceStone(rc,cc,row); }); }
+      if(val){
+        const s=document.createElement('div'); s.className='othelloStone '+val; cell.appendChild(s);
+      } else if(otPreviewPos&&otPreviewPos[0]===r&&otPreviewPos[1]===c){
+        const s=document.createElement('div'); s.className='othelloStone '+otMyColor; s.style.opacity='0.4'; cell.appendChild(s);
+        if(isMyTurn){ const rc=r,cc=c; cell.addEventListener('click',function(){ otPreviewPos=null; document.getElementById('othelloPreviewInfo').classList.add('hidden'); otRenderBoard(row); }); }
+      } else if(validSet.has(r+','+c)){
+        cell.classList.add('hint');
+        if(isMyTurn){ const rc=r,cc=c; cell.addEventListener('click',function(){ otPreviewPos=[rc,cc]; document.getElementById('othelloPreviewInfo').classList.remove('hidden'); otRenderBoard(row); }); }
+      }
       boardEl.appendChild(cell);
     }
   }
 }
+async function otConfirmPlace(){
+  if(!otPreviewPos||!otCurrentRow) return;
+  const [r,c]=otPreviewPos;
+  otPreviewPos=null;
+  document.getElementById('othelloPreviewInfo').classList.add('hidden');
+  await otPlaceStone(r,c,otCurrentRow);
+}
 async function otPlaceStone(r,c,row){ const flips=otGetFlips(row.board,r,c,otMyColor); if(flips.length===0) return; const newBoard=row.board.map(function(r){ return r.slice(); }); newBoard[r][c]=otMyColor; flips.forEach(function(f){ newBoard[f[0]][f[1]]=otMyColor; }); const nextTurn=otMyColor==='black'?'white':'black'; const nextMoves=otGetValidMoves(newBoard,nextTurn); const myNextMoves=nextMoves.length===0?otGetValidMoves(newBoard,otMyColor):null; let newStatus='active',winner=null; if(nextMoves.length===0&&myNextMoves&&myNextMoves.length===0){ newStatus='finished'; let black=0,white=0; for(let i=0;i<OT_SIZE;i++) for(let j=0;j<OT_SIZE;j++){ if(newBoard[i][j]==='black') black++; else if(newBoard[i][j]==='white') white++; } if(black>white) winner=row.black_player; else if(white>black) winner=row.white_player; else winner='draw'; } const update={board:newBoard,current_turn:nextTurn,status:newStatus}; if(winner) update.winner=winner; if(nextMoves.length===0&&newStatus==='active') update.current_turn=otMyColor; await supa.from('othello_games').update(update).eq('room_code',otRoomCode); }
 function otShowResult(row){ const rBox=document.getElementById('othelloResultBox'); rBox.classList.remove('hidden'); rBox.style.display='block'; let txt; if(row.winner==='draw') txt='무승부예요'; else if(row.winner===currentUser.username) txt='🏆 승리했어요!'; else txt='😢 패배했어요'; rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':row.winner==='draw'?'drawBox':'loseBox'); document.getElementById('othelloResultText').textContent=txt; }
-async function otLeave(){ if(otRoomCode){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(data&&data.status==='active'){ const opponent=otMyColor==='black'?data.white_player:data.black_player; if(opponent) await supa.from('othello_games').update({status:'finished',winner:opponent}).eq('room_code',otRoomCode); } } if(otChannel){ supa.removeChannel(otChannel); otChannel=null; } if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; } clearGameSession(); otRoomCode=''; otMyColor=''; enterOthello(); }
+async function otLeave(){ if(otRoomCode){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(data&&data.status==='active'){ const opponent=otMyColor==='black'?data.white_player:data.black_player; if(opponent) await supa.from('othello_games').update({status:'finished',winner:opponent}).eq('room_code',otRoomCode); } } if(otChannel){ supa.removeChannel(otChannel); otChannel=null; } if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; } clearGameSession(); otRoomCode=''; otMyColor=''; otPreviewPos=null; otCurrentRow=null; enterOthello(); }
 async function otRematch(){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(!data) return; const ready=(data.rematch_ready||[]).slice(); if(!ready.includes(currentUser.username)) ready.push(currentUser.username); await supa.from('othello_games').update({rematch_ready:ready}).eq('room_code',otRoomCode); document.getElementById('othelloRematchBtn').classList.add('hidden'); document.getElementById('othelloRematchNote').classList.remove('hidden'); const players=[data.black_player,data.white_player].filter(Boolean); if(players.every(function(p){ return ready.includes(p); })) await otStartRematch(data); }
 async function otStartRematch(oldRow){ const board=otInitBoard(); const newBlack=oldRow.white_player; const newWhite=oldRow.black_player; if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; await supa.from('othello_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[],pass_count:0}).eq('room_code',otRoomCode); document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); }
 function otSubscribeChat(){ if(otChatChannel) supa.removeChannel(otChatChannel); otChatChannel=addChannel(supa.channel('ot-chat-'+otRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+otRoomCode},function(p){ otAppendChat(p.new); }).subscribe()); }
@@ -695,6 +712,7 @@ document.getElementById('othelloJoinCode').addEventListener('keydown',function(e
 document.getElementById('othelloJoinCode').addEventListener('input',function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
 document.getElementById('othelloWaitLeaveBtn').addEventListener('click',function(){ clearAllChannels(); otRoomCode=''; enterOthello(); });
 document.getElementById('othelloGameLeaveBtn').addEventListener('click',otLeave);
+document.getElementById('othelloConfirmBtn').addEventListener('click',otConfirmPlace);
 document.getElementById('othelloRematchBtn').addEventListener('click',otRematch);
 document.getElementById('othelloPlayAgainBtn').addEventListener('click',otLeave);
 document.getElementById('othelloChatSendBtn').addEventListener('click',otSendChat);
