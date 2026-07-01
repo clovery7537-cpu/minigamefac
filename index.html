@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>민이게임천국</title>
+<meta property="og:title" content="민이게임천국" />
+<meta property="og:description" content="숫자야구, 오목, 오델로 실시간 멀티플레이어 게임" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://minigamefac.vercel.app" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; }
@@ -292,7 +296,14 @@
       <div id="omokTurnBanner" class="turnBanner">연결 중...</div>
       <p style="font-size:11px; color:#999; margin:0 0 8px; text-align:center;">렌주 룰 적용 · 흑돌만 3-3, 4-4, 6목 이상 금지 / 백돌은 제한 없음 / 흑돌 5목은 정확히 5개만</p>
       <div class="boardWrap"><div id="omokBoard" class="board"></div></div>
-      <div id="omokResultBox" class="resultBox winBox hidden"><p class="title" id="omokResultText"></p><button id="omokPlayAgainBtn" style="margin-top:8px;">다시 하기</button></div>
+      <div id="omokResultBox" class="resultBox winBox hidden">
+        <p class="title" id="omokResultText"></p>
+        <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
+          <button id="omokRematchBtn" class="primary">한판 더!</button>
+          <button id="omokPlayAgainBtn">나가기</button>
+        </div>
+        <p id="omokRematchNote" class="hidden detail" style="margin-top:8px;">상대방의 확인을 기다리는 중...</p>
+      </div>
       <div class="chatBox">
         <div class="chatHeader">채팅</div>
         <div id="omokChatList" class="chatList"></div>
@@ -335,7 +346,14 @@
         <div class="scoreBox"><div class="othelloStone white" style="width:20px;height:20px;"></div><b id="whiteScore">2</b></div>
       </div>
       <div class="boardWrap"><div id="othelloBoard" class="othelloBoard"></div></div>
-      <div id="othelloResultBox" class="resultBox winBox hidden"><p class="title" id="othelloResultText"></p><button id="othelloPlayAgainBtn" style="margin-top:8px;">다시 하기</button></div>
+      <div id="othelloResultBox" class="resultBox winBox hidden">
+        <p class="title" id="othelloResultText"></p>
+        <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
+          <button id="othelloRematchBtn" class="primary">한판 더!</button>
+          <button id="othelloPlayAgainBtn">나가기</button>
+        </div>
+        <p id="othelloRematchNote" class="hidden detail" style="margin-top:8px;">상대방의 확인을 기다리는 중...</p>
+      </div>
       <div class="chatBox">
         <div class="chatHeader">채팅</div>
         <div id="othelloChatList" class="chatList"></div>
@@ -693,6 +711,20 @@ function omokHandleUpdate(row){
   omokBoard=row.board;
   if(row.status==='waiting') return;
   if(document.getElementById('omokWaitScreen').classList.contains('hidden')===false){ omokEnterGame(row); return; }
+  // 한판 더 둘 다 눌렀으면 리매치 시작
+  if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){
+    const players=[row.black_player,row.white_player].filter(Boolean);
+    if(players.every(function(p){ return row.rematch_ready.includes(p); })){
+      // 아직 내가 시작 안 한 경우 (상대가 먼저 눌러서 처리된 경우)
+      if(row.board.every(function(r){ return r.every(function(c){ return c===null; }); })){
+        if(omokMyColor==='black') omokMyColor='white'; else omokMyColor='black';
+        document.getElementById('omokResultBox').style.display='none';
+        document.getElementById('omokResultBox').classList.add('hidden');
+        document.getElementById('omokRematchBtn').classList.remove('hidden');
+        document.getElementById('omokRematchNote').classList.add('hidden');
+      }
+    }
+  }
   omokRenderBoard(row); omokUpdateBanner(row);
   if(row.status==='finished'){ omokShowResult(row); }
 }
@@ -833,7 +865,46 @@ function omokShowResult(row){
   document.getElementById('omokResultText').textContent=row.winner===currentUser.username?'🏆 승리했어요!':'😢 패배했어요';
 }
 
-function omokLeave(){ if(omokChannel){ supa.removeChannel(omokChannel); omokChannel=null; } if(omokChatChannel){ supa.removeChannel(omokChatChannel); omokChatChannel=null; } omokRoomCode=''; omokMyColor=''; enterOmok(); }
+async function omokLeave(){
+  // 게임 중 나가면 패배 처리
+  if(omokRoomCode){
+    const {data}=await supa.from('omok_games').select('*').eq('room_code',omokRoomCode).maybeSingle();
+    if(data&&data.status==='active'){
+      const opponent=omokMyColor==='black'?data.white_player:data.black_player;
+      if(opponent) await supa.from('omok_games').update({status:'finished',winner:opponent}).eq('room_code',omokRoomCode);
+    }
+  }
+  if(omokChannel){ supa.removeChannel(omokChannel); omokChannel=null; }
+  if(omokChatChannel){ supa.removeChannel(omokChatChannel); omokChatChannel=null; }
+  omokRoomCode=''; omokMyColor=''; enterOmok();
+}
+
+async function omokRematch(){
+  const {data}=await supa.from('omok_games').select('*').eq('room_code',omokRoomCode).maybeSingle();
+  if(!data) return;
+  const ready=(data.rematch_ready||[]).slice();
+  if(!ready.includes(currentUser.username)) ready.push(currentUser.username);
+  await supa.from('omok_games').update({rematch_ready:ready}).eq('room_code',omokRoomCode);
+  document.getElementById('omokRematchBtn').classList.add('hidden');
+  document.getElementById('omokRematchNote').classList.remove('hidden');
+  // 둘 다 눌렀는지 확인
+  const players=[data.black_player,data.white_player].filter(Boolean);
+  if(players.every(function(p){ return ready.includes(p); })){
+    await omokStartRematch(data);
+  }
+}
+
+async function omokStartRematch(oldRow){
+  const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); }
+  // 색 교체
+  const newBlack=oldRow.white_player; const newWhite=oldRow.black_player;
+  if(omokMyColor==='black') omokMyColor='white'; else omokMyColor='black';
+  await supa.from('omok_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[]}).eq('room_code',omokRoomCode);
+  document.getElementById('omokResultBox').style.display='none';
+  document.getElementById('omokResultBox').classList.add('hidden');
+  document.getElementById('omokRematchBtn').classList.remove('hidden');
+  document.getElementById('omokRematchNote').classList.add('hidden');
+}
 function omokSubscribeChat(){ omokChatChannel=addChannel(supa.channel('omok-chat-'+omokRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+omokRoomCode},function(p){ omokAppendChat(p.new); }).subscribe()); }
 async function omokLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',omokRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('omokChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ omokRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
 function omokAppendChat(m){ omokRenderChatMsg(m); const el=document.getElementById('omokChatList'); el.scrollTop=el.scrollHeight; }
@@ -890,6 +961,13 @@ function otHandleUpdate(row){
   otBoard=row.board;
   if(row.status==='waiting') return;
   if(document.getElementById('othelloWaitScreen').classList.contains('hidden')===false){ otEnterGame(row); return; }
+  if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){
+    const players=[row.black_player,row.white_player].filter(Boolean);
+    if(players.every(function(p){ return row.rematch_ready.includes(p); })){
+      const isAllNull=row.board.every(function(r){ return r.every(function(c){ return c===null; }); });
+      if(isAllNull){ if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); }
+    }
+  }
   otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row);
   if(row.status==='finished') otShowResult(row);
 }
@@ -984,7 +1062,39 @@ function otShowResult(row){
   document.getElementById('othelloResultText').textContent=txt;
 }
 
-function otLeave(){ if(otChannel){ supa.removeChannel(otChannel); otChannel=null; } if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; } otRoomCode=''; otMyColor=''; enterOthello(); }
+async function otLeave(){
+  if(otRoomCode){
+    const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle();
+    if(data&&data.status==='active'){
+      const opponent=otMyColor==='black'?data.white_player:data.black_player;
+      if(opponent) await supa.from('othello_games').update({status:'finished',winner:opponent}).eq('room_code',otRoomCode);
+    }
+  }
+  if(otChannel){ supa.removeChannel(otChannel); otChannel=null; }
+  if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; }
+  otRoomCode=''; otMyColor=''; enterOthello();
+}
+async function otRematch(){
+  const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle();
+  if(!data) return;
+  const ready=(data.rematch_ready||[]).slice();
+  if(!ready.includes(currentUser.username)) ready.push(currentUser.username);
+  await supa.from('othello_games').update({rematch_ready:ready}).eq('room_code',otRoomCode);
+  document.getElementById('othelloRematchBtn').classList.add('hidden');
+  document.getElementById('othelloRematchNote').classList.remove('hidden');
+  const players=[data.black_player,data.white_player].filter(Boolean);
+  if(players.every(function(p){ return ready.includes(p); })) await otStartRematch(data);
+}
+async function otStartRematch(oldRow){
+  const board=otInitBoard();
+  const newBlack=oldRow.white_player; const newWhite=oldRow.black_player;
+  if(otMyColor==='black') otMyColor='white'; else otMyColor='black';
+  await supa.from('othello_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[],pass_count:0}).eq('room_code',otRoomCode);
+  document.getElementById('othelloResultBox').style.display='none';
+  document.getElementById('othelloResultBox').classList.add('hidden');
+  document.getElementById('othelloRematchBtn').classList.remove('hidden');
+  document.getElementById('othelloRematchNote').classList.add('hidden');
+}
 function otSubscribeChat(){ otChatChannel=addChannel(supa.channel('ot-chat-'+otRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+otRoomCode},function(p){ otAppendChat(p.new); }).subscribe()); }
 async function otLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',otRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('othelloChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ otRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
 function otAppendChat(m){ otRenderChatMsg(m); const el=document.getElementById('othelloChatList'); el.scrollTop=el.scrollHeight; }
@@ -1054,6 +1164,8 @@ document.getElementById('omokJoinCode').addEventListener('keydown', function(e){
 document.getElementById('omokJoinCode').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
 document.getElementById('omokWaitLeaveBtn').addEventListener('click', function(){ clearAllChannels(); omokRoomCode=''; enterOmok(); });
 document.getElementById('omokGameLeaveBtn').addEventListener('click', omokLeave);
+document.getElementById('omokRematchBtn').addEventListener('click', omokRematch);
+document.getElementById('omokPlayAgainBtn').addEventListener('click', omokLeave);
 document.getElementById('omokPlayAgainBtn').addEventListener('click', function(){ clearAllChannels(); omokRoomCode=''; enterOmok(); });
 document.getElementById('omokChatSendBtn').addEventListener('click', omokSendChat);
 document.getElementById('omokChatInput').addEventListener('keydown', function(e){ if(e.key==='Enter') omokSendChat(); });
@@ -1068,6 +1180,8 @@ document.getElementById('othelloJoinCode').addEventListener('keydown', function(
 document.getElementById('othelloJoinCode').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
 document.getElementById('othelloWaitLeaveBtn').addEventListener('click', function(){ clearAllChannels(); otRoomCode=''; enterOthello(); });
 document.getElementById('othelloGameLeaveBtn').addEventListener('click', otLeave);
+document.getElementById('othelloRematchBtn').addEventListener('click', otRematch);
+document.getElementById('othelloPlayAgainBtn').addEventListener('click', otLeave);
 document.getElementById('othelloPlayAgainBtn').addEventListener('click', function(){ clearAllChannels(); otRoomCode=''; enterOthello(); });
 document.getElementById('othelloChatSendBtn').addEventListener('click', otSendChat);
 document.getElementById('othelloChatInput').addEventListener('keydown', function(e){ if(e.key==='Enter') otSendChat(); });
