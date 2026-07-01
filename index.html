@@ -3,29 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>숫자 야구 게임</title>
+<title>민이게임천국</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
-    background: #f5f5f3; color: #1a1a1a; display: flex; justify-content: center;
-    padding: 40px 16px; margin: 0;
-  }
-  .container { width: 100%; max-width: 440px; background: #fff; border: 1px solid #e0e0dc; border-radius: 16px; padding: 24px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; background: #f5f5f3; color: #1a1a1a; display: flex; justify-content: center; padding: 40px 16px; margin: 0; }
+  .container { width: 100%; max-width: 480px; background: #fff; border: 1px solid #e0e0dc; border-radius: 16px; padding: 24px; }
   h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
   .subtitle { font-size: 14px; color: #6b6b66; margin: 0 0 20px; }
-  .row { display: flex; gap: 8px; margin-bottom: 8px; }
-  input[type="text"], input[type="password"] {
-    flex: 1; text-align: center; font-size: 20px; letter-spacing: 4px;
-    padding: 10px; border: 1px solid #d0d0cb; border-radius: 8px; outline: none; width: 100%;
-  }
+  input[type="text"], input[type="password"] { text-align: center; font-size: 18px; letter-spacing: 4px; padding: 10px; border: 1px solid #d0d0cb; border-radius: 8px; outline: none; width: 100%; }
   input:focus { border-color: #888; }
   input:disabled { background: #f0f0ed; color: #999; }
-  button {
-    border: 1px solid #d0d0cb; background: #fff; border-radius: 8px;
-    padding: 10px 18px; font-size: 15px; cursor: pointer; transition: background 0.15s;
-  }
+  button { border: 1px solid #d0d0cb; background: #fff; border-radius: 8px; padding: 10px 18px; font-size: 15px; cursor: pointer; transition: background 0.15s; }
   button:hover { background: #f0f0ed; }
   button:active { transform: scale(0.97); }
   button:disabled { opacity: 0.4; cursor: default; }
@@ -33,29 +22,16 @@
   .primary:hover { background: #333; }
   .header-row { display: flex; align-items: center; justify-content: space-between; }
   .errMsg { font-size: 13px; color: #c0392b; min-height: 18px; margin: 0 0 8px; }
-  #genStatus, .infoBox { background: #f5f5f3; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; color: #6b6b66; }
-  #genStatus span, .infoBox span { color: #1a1a1a; font-weight: 600; }
-  .typingDisplay { font-size: 22px; letter-spacing: 8px; font-weight: 600; color: #1a1a1a; margin: 4px 0 0; min-height: 28px; }
+  .infoBox { background: #f5f5f3; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; color: #6b6b66; }
+  .infoBox span { color: #1a1a1a; font-weight: 600; }
   .historyEmpty { text-align: center; color: #999; font-size: 13px; padding: 16px 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; display: none; }
-  th { text-align: left; padding: 6px 4px; color: #6b6b66; font-weight: 600; border-bottom: 1px solid #e0e0dc; }
-  th:last-child { text-align: right; }
-  td { padding: 6px 4px; border-bottom: 1px solid #eee; }
-  td:last-child { text-align: right; font-weight: 600; }
-  td:nth-child(2) { letter-spacing: 2px; }
   .resultBox { display: none; margin-top: 16px; border-radius: 8px; padding: 14px; text-align: center; }
   .resultBox p { margin: 0; }
-  .winBox { background: #e8f5e9; }
-  .winBox .title { color: #2e7d32; font-weight: 600; font-size: 15px; }
-  .loseBox { background: #fdecea; }
-  .loseBox .title { color: #c0392b; font-weight: 600; font-size: 15px; }
-  .drawBox { background: #fff8e1; }
-  .drawBox .title { color: #7a5e10; font-weight: 600; font-size: 15px; }
+  .winBox { background: #e8f5e9; } .winBox .title { color: #2e7d32; font-weight: 600; font-size: 15px; }
+  .loseBox { background: #fdecea; } .loseBox .title { color: #c0392b; font-weight: 600; font-size: 15px; }
+  .drawBox { background: #fff8e1; } .drawBox .title { color: #7a5e10; font-weight: 600; font-size: 15px; }
   .detail { font-size: 13px; color: #555; margin-top: 4px !important; }
-  .notice {
-    background: #fff8e1; border: 1px solid #f1e0a6; border-radius: 8px;
-    padding: 10px 12px; font-size: 13px; color: #7a5e10; margin-bottom: 16px; line-height: 1.5;
-  }
+  .notice { background: #fff8e1; border: 1px solid #f1e0a6; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #7a5e10; margin-bottom: 16px; line-height: 1.5; }
   .hidden { display: none !important; }
   .roomCodeBox { background: #e6f0ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; text-align: center; }
   .roomCodeBox p { margin: 0; }
@@ -73,13 +49,13 @@
   .rankNum.top1 { color:#d4a017; } .rankNum.top2 { color:#888; } .rankNum.top3 { color:#b46a3c; }
   .chatBox { border:1px solid #e0e0dc; border-radius:8px; margin-top:16px; }
   .chatHeader { font-size:13px; color:#6b6b66; padding:8px 12px; border-bottom:1px solid #eee; }
-  .chatList { height:140px; overflow-y:auto; padding:8px 12px; display:flex; flex-direction:column; gap:6px; }
-  .chatMsg { max-width:75%; padding:6px 10px; border-radius:12px; font-size:13px; line-height:1.4; }
+  .chatList { height:120px; overflow-y:auto; padding:8px 12px; display:flex; flex-direction:column; gap:5px; }
+  .chatMsg { max-width:75%; padding:5px 10px; border-radius:12px; font-size:13px; line-height:1.4; }
   .chatMsg.me { align-self:flex-end; background:#1a1a1a; color:#fff; }
   .chatMsg.other { align-self:flex-start; background:#f0f0ed; color:#1a1a1a; }
   .chatMsgSender { font-size:11px; color:#999; margin-bottom:2px; }
   .chatInputRow { display:flex; gap:6px; padding:8px 12px; border-top:1px solid #eee; }
-  .chatInputRow input { font-size:14px; letter-spacing:0; padding:8px; }
+  .chatInputRow input { font-size:14px; letter-spacing:0; padding:8px; flex:1; }
   .chatInputRow button { padding:8px 12px; font-size:13px; }
   .countBtnRow { display:flex; gap:8px; margin-bottom:8px; }
   .countBtn { flex:1; padding:18px 8px; font-size:16px; }
@@ -87,6 +63,41 @@
   .playerRow { display:flex; align-items:center; gap:8px; padding:8px 4px; font-size:14px; border-bottom:1px solid #eee; }
   .playerBadge { font-size:11px; background:#e6f0ff; color:#2563eb; padding:2px 6px; border-radius:6px; }
   .turnBanner { background:#1a1a1a; color:#fff; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:14px; text-align:center; }
+  .typingDisplay { font-size:22px; letter-spacing:8px; font-weight:600; color:#1a1a1a; margin:4px 0 0; min-height:28px; }
+
+  /* 홈 화면 */
+  .homeTitle { font-size:28px; font-weight:700; text-align:center; margin:0 0 4px; }
+  .homeSubtitle { font-size:14px; color:#6b6b66; text-align:center; margin:0 0 24px; }
+  .gameCardGrid { display:flex; flex-direction:column; gap:10px; }
+  .gameCard { border:1px solid #e0e0dc; border-radius:12px; padding:18px 20px; cursor:pointer; display:flex; align-items:center; gap:16px; transition:background 0.15s; }
+  .gameCard:hover { background:#f5f5f3; }
+  .gameCardIcon { font-size:32px; width:48px; text-align:center; }
+  .gameCardInfo { flex:1; }
+  .gameCardTitle { font-size:16px; font-weight:600; margin:0 0 2px; }
+  .gameCardDesc { font-size:13px; color:#6b6b66; margin:0; }
+
+  /* 오목/오델로 보드 */
+  .boardWrap { display:flex; justify-content:center; margin:12px 0; overflow-x:auto; }
+  .board { display:inline-grid; gap:0; border:2px solid #1a1a1a; border-radius:4px; background:#d4a017; padding:8px; }
+  .cell { width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; }
+  .cell::before { content:''; position:absolute; width:100%; height:1px; background:#5a3e00; top:50%; transform:translateY(-50%); z-index:0; }
+  .cell::after { content:''; position:absolute; height:100%; width:1px; background:#5a3e00; left:50%; transform:translateX(-50%); z-index:0; }
+  .cell:hover::before, .cell:hover::after { background:#333; }
+  .stone { width:22px; height:22px; border-radius:50%; z-index:1; position:relative; box-shadow:1px 1px 3px rgba(0,0,0,0.4); }
+  .stone.black { background:radial-gradient(circle at 35% 35%, #555, #000); }
+  .stone.white { background:radial-gradient(circle at 35% 35%, #fff, #ccc); border:1px solid #aaa; }
+  .stone.hint { width:10px; height:10px; background:rgba(0,0,0,0.2); border-radius:50%; }
+
+  /* 오델로 보드 */
+  .othelloBoard { display:inline-grid; gap:2px; background:#2e7d32; padding:8px; border-radius:4px; }
+  .othelloCell { width:40px; height:40px; background:#2e7d32; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.1s; }
+  .othelloCell:hover { background:#388e3c; }
+  .othelloCell.hint { background:#43a047; }
+  .othelloStone { width:32px; height:32px; border-radius:50%; box-shadow:1px 1px 3px rgba(0,0,0,0.4); }
+  .othelloStone.black { background:radial-gradient(circle at 35% 35%, #555, #000); }
+  .othelloStone.white { background:radial-gradient(circle at 35% 35%, #fff, #ccc); border:1px solid #aaa; }
+  .scoreRow { display:flex; gap:12px; justify-content:center; margin-bottom:8px; font-size:14px; }
+  .scoreBox { display:flex; align-items:center; gap:6px; background:#f5f5f3; padding:6px 12px; border-radius:8px; }
 </style>
 </head>
 <body>
@@ -94,44 +105,50 @@
 
   <!-- 로그인 -->
   <div id="loginScreen">
-    <h1>숫자 야구 게임</h1>
+    <h1>민이게임천국</h1>
     <p class="subtitle">아이디와 비밀번호로 시작하세요</p>
-    <div class="notice">아이디는 한글 2~4자, 비밀번호는 숫자 4자리예요. 처음 보는 아이디면 자동으로 계정이 만들어져요. 간단한 게임용이니 평소 쓰시는 비밀번호와 다르게 설정해주세요.</div>
-    <input id="loginUsername" type="text" placeholder="아이디 (이름)" style="width:100%; margin-bottom:8px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    <input id="loginPassword" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 (숫자 4자리)" style="width:100%;" />
+    <div class="notice">아이디는 한글 2~4자, 비밀번호는 숫자 4자리예요. 처음 보는 아이디면 자동으로 계정이 만들어져요.</div>
+    <input id="loginUsername" type="text" placeholder="아이디 (이름)" style="margin-bottom:8px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    <input id="loginPassword" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 (숫자 4자리)" />
     <p class="errMsg" id="loginErr"></p>
     <button id="loginBtn" class="primary" style="width:100%;">시작하기</button>
   </div>
 
-  <!-- 역할 선택 -->
-  <div id="roleScreen" class="hidden">
+  <!-- 홈 -->
+  <div id="homeScreen" class="hidden">
     <div class="statsBar">
-      <span><b id="statsUsername">-</b>님 · <b id="statsWins">0</b>승 <b id="statsLosses">0</b>패 (<b id="statsRate">0%</b>)</span>
+      <span><b id="statsUsername">-</b>님 환영해요</span>
       <span style="display:flex; gap:10px;">
+        <button id="homeLeaderboardBtn" class="linkBtn">랭킹</button>
         <button id="logoutBtn" class="linkBtn">로그아웃</button>
         <button id="deleteAccountBtn" class="linkBtn" style="color:#c0392b;">계정 삭제</button>
       </span>
     </div>
-    <h1>숫자 야구 게임</h1>
-    <p class="subtitle">기회는 9번 · 2~4인 실시간 플레이</p>
-    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
-      <button id="resumeRoomBtn" class="hidden" style="text-align:left; padding:14px 16px; background:#fff8e1; border-color:#f1e0a6;">진행 중인 게임 이어하기</button>
-      <button id="goCreateBtn" class="primary" style="text-align:left; padding:14px 16px;">방 만들기</button>
-      <button id="goJoinBtn" style="text-align:left; padding:14px 16px;">참가하기 (방 코드 입력)</button>
+    <p class="homeTitle">민이게임천국</p>
+    <p class="homeSubtitle">게임을 선택하세요</p>
+    <div class="gameCardGrid">
+      <div class="gameCard" id="goBaseballBtn">
+        <div class="gameCardIcon">⚾</div>
+        <div class="gameCardInfo">
+          <p class="gameCardTitle">숫자 야구</p>
+          <p class="gameCardDesc">중복 없는 4자리 숫자를 맞혀보세요 · 2~4인</p>
+        </div>
+      </div>
+      <div class="gameCard" id="goOmokBtn">
+        <div class="gameCardIcon">⚫</div>
+        <div class="gameCardInfo">
+          <p class="gameCardTitle">오목</p>
+          <p class="gameCardDesc">15×15 · 먼저 5개를 연속으로 놓으면 승리</p>
+        </div>
+      </div>
+      <div class="gameCard" id="goOthelloBtn">
+        <div class="gameCardIcon">🟢</div>
+        <div class="gameCardInfo">
+          <p class="gameCardTitle">오델로</p>
+          <p class="gameCardDesc">8×8 · 상대 돌을 뒤집어 더 많이 차지하면 승리</p>
+        </div>
+      </div>
     </div>
-    <button id="goLeaderboardBtn" style="width:100%;">전체 랭킹 보기</button>
-  </div>
-
-  <!-- 인원수 선택 -->
-  <div id="createCountScreen" class="hidden">
-    <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">인원 선택</h1><button id="createCountBackBtn">뒤로</button></div>
-    <p class="subtitle">출제자를 포함한 전체 인원수를 선택하세요</p>
-    <div class="countBtnRow">
-      <button class="countBtn" data-count="2">2명</button>
-      <button class="countBtn" data-count="3">3명</button>
-      <button class="countBtn" data-count="4">4명</button>
-    </div>
-    <p style="font-size:12px; color:#999;">2명을 고르면 서로 한 번씩 번갈아 출제해요. 3~4명은 한 명이 출제자로 고정되고 나머지가 랜덤 순서로 돌아가며 추측해요.</p>
   </div>
 
   <!-- 랭킹 -->
@@ -145,679 +162,830 @@
     <div id="leaderboardEmpty" class="historyEmpty hidden">아직 기록이 없어요</div>
   </div>
 
-  <!-- 참가 코드 입력 -->
-  <div id="guestJoin" class="hidden">
-    <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">참가하기</h1><button id="guestJoinBackBtn">뒤로</button></div>
-    <p class="subtitle">방 코드를 입력하세요</p>
-    <input id="joinCodeInput" type="text" inputmode="numeric" maxlength="4" placeholder="예: 4821" style="width:100%; letter-spacing:6px;" />
-    <p class="errMsg" id="joinErr"></p>
-    <button id="joinConfirmBtn" class="primary" style="width:100%; margin-bottom:8px;">참가하기</button>
-    <button id="joinSpectateBtn" style="width:100%;">관전으로 참가</button>
+  <!-- ===================== 숫자야구 ===================== -->
+  <div id="baseballSection" class="hidden">
+
+    <div id="bRoleScreen">
+      <div class="header-row" style="margin-bottom:12px;">
+        <h1 style="margin:0;">숫자 야구</h1>
+        <button id="bBackHomeBtn">홈으로</button>
+      </div>
+      <div class="statsBar" style="margin-bottom:12px;">
+        <span><b id="bStatsWins">0</b>승 <b id="bStatsLosses">0</b>패 (<b id="bStatsRate">0%</b>)</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+        <button id="bResumeBtn" class="hidden" style="text-align:left; padding:14px 16px; background:#fff8e1; border-color:#f1e0a6;">진행 중인 게임 이어하기</button>
+        <button id="bCreateBtn" class="primary" style="text-align:left; padding:14px 16px;">방 만들기</button>
+        <button id="bJoinBtn" style="text-align:left; padding:14px 16px;">참가하기 (방 코드 입력)</button>
+      </div>
+    </div>
+
+    <div id="bCreateCountScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">인원 선택</h1><button id="bCreateCountBackBtn">뒤로</button></div>
+      <p class="subtitle">출제자 포함 전체 인원수를 선택하세요</p>
+      <div class="countBtnRow">
+        <button class="countBtn" data-count="2">2명</button>
+        <button class="countBtn" data-count="3">3명</button>
+        <button class="countBtn" data-count="4">4명</button>
+      </div>
+      <p style="font-size:12px; color:#999;">2명: 번갈아 출제 · 3~4명: 출제자 1명 고정</p>
+    </div>
+
+    <div id="bJoinScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">참가하기</h1><button id="bJoinBackBtn">뒤로</button></div>
+      <input id="bJoinCodeInput" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" style="width:100%; margin-bottom:8px; letter-spacing:6px;" />
+      <p class="errMsg" id="bJoinErr"></p>
+      <button id="bJoinConfirmBtn" class="primary" style="width:100%; margin-bottom:8px;">참가하기</button>
+      <button id="bSpectateBtn" style="width:100%;">관전으로 참가</button>
+    </div>
+
+    <div id="bLobbyScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">대기실</h1><button id="bLobbyLeaveBtn">나가기</button></div>
+      <div class="roomCodeBox"><p class="roomCodeLabel">방 코드</p><p id="bLobbyRoomCode" class="roomCodeValue">----</p></div>
+      <div class="infoBox"><span id="bLobbyCount">0</span> / <span id="bLobbyMax">0</span> 명 입장</div>
+      <div id="bLobbyPlayerList" class="playerList"></div>
+      <div id="bLobbySpectatorNote" class="hidden" style="font-size:12px; color:#999; margin-bottom:8px;"></div>
+      <p style="font-size:13px; color:#999; text-align:center;">모든 인원이 들어오면 자동으로 시작돼요</p>
+    </div>
+
+    <div id="bGameScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:12px;">
+        <p style="margin:0; font-size:13px; color:#6b6b66;">방 코드: <b id="bGameRoomCode" style="color:#1a1a1a;">----</b></p>
+        <button id="bGameLeaveBtn">나가기</button>
+      </div>
+      <div id="bgsSecretForm" class="hidden">
+        <p class="subtitle" style="margin-bottom:8px;">정답(중복 없는 4자리 숫자)을 입력하세요</p>
+        <div class="notice">화면을 가려주세요. 입력값은 ●로 표시되어 다른 참가자는 볼 수 없어요.</div>
+        <input id="bSegSecretInput" type="password" inputmode="numeric" maxlength="4" placeholder="●●●●" autocomplete="off" style="width:100%; letter-spacing:6px;" />
+        <p class="errMsg" id="bSegSecretErr"></p>
+        <button id="bSegSecretBtn" class="primary" style="width:100%;">정답 설정하고 시작</button>
+      </div>
+      <div id="bgsWaitingSecret" class="hidden" style="text-align:center; padding:2rem 0;">
+        <p style="font-size:15px; color:#444; margin:0;"><b id="bgsWaitingHostName">-</b>님이 정답을 설정하고 있어요...</p>
+      </div>
+      <div id="bgsPlay" class="hidden">
+        <div class="roomCodeBox hidden" id="bgsHostSecretBox"><p class="roomCodeLabel">내가 낸 정답</p><p id="bgsMySecret" class="roomCodeValue">----</p></div>
+        <div id="bgsTurnBanner" class="turnBanner">차례 확인 중...</div>
+        <div class="infoBox"><p style="font-size:12px;"><span id="bgsTypingLabel">입력 중</span>...</p><p id="bgsTypingDisplay" class="typingDisplay">— — — —</p></div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;" id="bgsInputRow">
+          <input id="bgsGuessInput" type="text" inputmode="numeric" maxlength="4" placeholder="예: 1234" style="flex:1; letter-spacing:6px;" />
+          <button id="bgsSubmitBtn" class="primary">제출</button>
+        </div>
+        <p class="errMsg" id="bgsErrMsg"></p>
+        <div class="infoBox">기회: <span id="bgsTryCount">0</span> / 9</div>
+        <div id="bgsHistoryEmpty" class="historyEmpty">아직 시도한 기록이 없어요</div>
+        <table id="bgsHistoryTable" style="width:100%; border-collapse:collapse; font-size:14px; display:none;">
+          <thead><tr style="border-bottom:1px solid #e0e0dc;"><th style="text-align:left; padding:6px 4px; color:#6b6b66;">누가</th><th style="text-align:left; padding:6px 4px; color:#6b6b66;">숫자</th><th style="text-align:right; padding:6px 4px; color:#6b6b66;">결과</th></tr></thead>
+          <tbody id="bgsHistoryBody"></tbody>
+        </table>
+      </div>
+      <div id="bgsSegmentResult" class="hidden">
+        <div id="bgsSegWinBox" class="resultBox winBox"><p class="title">✓ <span id="bgsSegWinner">-</span>님이 정답을 맞혔어요!</p><p id="bgsSegWinReveal" class="detail"></p><p id="bgsSegWinCount" class="detail"></p></div>
+        <div id="bgsSegLoseBox" class="resultBox loseBox"><p class="title">9번의 기회를 모두 썼어요</p><p id="bgsSegRevealText" class="detail"></p></div>
+        <div id="bgsNextArea" class="hidden" style="margin-top:16px; text-align:center;">
+          <button id="bgsNextBtn" class="primary" style="width:100%;">다음</button>
+          <p id="bgsNextWaitNote" class="hidden detail" style="margin-top:8px;">상대방의 확인을 기다리는 중...</p>
+        </div>
+        <p id="bgsSpectatorNote" class="hidden detail" style="text-align:center; margin-top:12px;">관전 중 · 곧 다음 화면으로 넘어가요</p>
+      </div>
+      <div id="bgsFinalResult" class="hidden">
+        <div id="bgsFinalWinBox" class="resultBox winBox"><p class="title">🏆 <span id="bgsFinalWinner">-</span>님 승리!</p><p id="bgsFinalWinDetail" class="detail"></p></div>
+        <div id="bgsFinalDrawBox" class="resultBox drawBox"><p class="title">무승부예요</p></div>
+        <button id="bgsBackBtn" class="primary" style="width:100%; margin-top:16px;">처음으로</button>
+      </div>
+      <div class="chatBox">
+        <div class="chatHeader">채팅</div>
+        <div id="bGameChatList" class="chatList"></div>
+        <div class="chatInputRow">
+          <input id="bGameChatInput" type="text" maxlength="200" placeholder="메시지 입력" />
+          <button id="bGameChatSendBtn">전송</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- 대기실 -->
-  <div id="lobbyScreen" class="hidden">
-    <div class="header-row" style="margin-bottom:12px;">
-      <h1 style="margin:0;">대기실</h1>
-      <button id="lobbyLeaveBtn">나가기</button>
+  <!-- ===================== 오목 ===================== -->
+  <div id="omokSection" class="hidden">
+    <div id="omokLobby">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">오목</h1><button id="omokBackHomeBtn">홈으로</button></div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+        <button id="omokCreateBtn" class="primary" style="padding:14px 16px; text-align:left;">방 만들기 (선공 = 흑돌)</button>
+        <button id="omokJoinLobbyBtn" style="padding:14px 16px; text-align:left;">참가하기 (후공 = 백돌)</button>
+      </div>
     </div>
-    <div class="roomCodeBox">
-      <p class="roomCodeLabel">방 코드</p>
-      <p id="lobbyRoomCode" class="roomCodeValue">----</p>
+    <div id="omokJoinScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">오목 참가</h1><button id="omokJoinBackBtn">뒤로</button></div>
+      <input id="omokJoinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" style="width:100%; margin-bottom:8px; letter-spacing:6px;" />
+      <p class="errMsg" id="omokJoinErr"></p>
+      <button id="omokJoinConfirmBtn" class="primary" style="width:100%;">참가하기</button>
     </div>
-    <div class="infoBox"><span id="lobbyCount">0</span> / <span id="lobbyMax">0</span> 명 입장</div>
-    <div id="lobbyPlayerList" class="playerList"></div>
-    <div id="lobbySpectatorNote" class="hidden" style="font-size:12px; color:#999; margin-bottom:8px;"></div>
-    <p id="lobbyWaitNote" style="font-size:13px; color:#999; text-align:center;">모든 인원이 들어오면 자동으로 시작돼요</p>
+    <div id="omokWaitScreen" class="hidden" style="text-align:center; padding:2rem 0;">
+      <div class="roomCodeBox"><p class="roomCodeLabel">방 코드</p><p id="omokWaitCode" class="roomCodeValue">----</p></div>
+      <p style="font-size:14px; color:#444; margin:0;">상대방을 기다리는 중...</p>
+      <button id="omokWaitLeaveBtn" style="margin-top:16px;">나가기</button>
+    </div>
+    <div id="omokGameScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:8px;">
+        <p style="margin:0; font-size:13px; color:#6b6b66;">방: <b id="omokGameCode">----</b></p>
+        <button id="omokGameLeaveBtn">나가기</button>
+      </div>
+      <div id="omokTurnBanner" class="turnBanner">연결 중...</div>
+      <div class="boardWrap"><div id="omokBoard" class="board"></div></div>
+      <div id="omokResultBox" class="resultBox winBox hidden"><p class="title" id="omokResultText"></p><button id="omokPlayAgainBtn" style="margin-top:8px;">다시 하기</button></div>
+      <div class="chatBox">
+        <div class="chatHeader">채팅</div>
+        <div id="omokChatList" class="chatList"></div>
+        <div class="chatInputRow">
+          <input id="omokChatInput" type="text" maxlength="200" placeholder="메시지 입력" />
+          <button id="omokChatSendBtn">전송</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- 게임 화면 -->
-  <div id="gameScreen" class="hidden">
-    <div class="header-row" style="margin-bottom:12px;">
-      <p style="margin:0; font-size:13px; color:#6b6b66;">방 코드: <b id="gameRoomCode" style="color:#1a1a1a;">----</b></p>
-      <button id="gameLeaveBtn">나가기</button>
-    </div>
-
-    <!-- 정답 설정(내 차례) -->
-    <div id="gsSecretForm" class="hidden">
-      <p class="subtitle" style="margin-bottom:8px;">정답(중복 없는 4자리 숫자)을 입력하세요</p>
-      <div class="notice">화면을 다른 사람이 보지 않도록 가려주세요. 입력값은 ●로 표시되어 보이지 않고, 다른 참가자는 절대 조회할 수 없어요.</div>
-      <input id="segSecretInput" type="password" inputmode="numeric" maxlength="4" placeholder="●●●●" autocomplete="off" style="width:100%; letter-spacing:6px;" />
-      <p class="errMsg" id="segSecretErr"></p>
-      <button id="segSecretBtn" class="primary" style="width:100%;">정답 설정하고 시작</button>
-    </div>
-
-    <!-- 다른 사람이 정답 설정 중 -->
-    <div id="gsWaitingSecret" class="hidden" style="text-align:center; padding:2rem 0;">
-      <p style="font-size:15px; color:#444; margin:0;"><b id="gsWaitingHostName">-</b>님이 정답을 설정하고 있어요...</p>
-      <p style="font-size:13px; color:#999; margin:8px 0 0;">자동으로 시작돼요. 잠시만 기다려주세요.</p>
-    </div>
-
-    <!-- 진행 중 -->
-    <div id="gsPlay" class="hidden">
-      <div class="roomCodeBox" id="gsHostSecretBox">
-        <p class="roomCodeLabel">내가 낸 정답</p>
-        <p id="gsMySecret" class="roomCodeValue">----</p>
+  <!-- ===================== 오델로 ===================== -->
+  <div id="othelloSection" class="hidden">
+    <div id="othelloLobby">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">오델로</h1><button id="othelloBackHomeBtn">홈으로</button></div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+        <button id="othelloCreateBtn" class="primary" style="padding:14px 16px; text-align:left;">방 만들기 (선공 = 흑돌)</button>
+        <button id="othelloJoinLobbyBtn" style="padding:14px 16px; text-align:left;">참가하기 (후공 = 백돌)</button>
       </div>
-      <div id="gsTurnBanner" class="turnBanner">차례 확인 중...</div>
-      <div class="infoBox">
-        <p style="font-size:12px;"><span id="gsTypingLabel">입력 중</span>...</p>
-        <p id="gsTypingDisplay" class="typingDisplay">— — — —</p>
-      </div>
-      <div class="row hidden" id="gsInputRow">
-        <input id="gsGuessInput" type="text" inputmode="numeric" maxlength="4" placeholder="예: 1234" style="letter-spacing:6px;" />
-        <button id="gsSubmitBtn" class="primary">제출</button>
-      </div>
-      <p class="errMsg" id="gsErrMsg"></p>
-      <div id="genStatus">기회: <span id="gsTryCount">0</span> / 9</div>
-      <div id="gsHistoryEmpty" class="historyEmpty">아직 시도한 기록이 없어요</div>
-      <table id="gsHistoryTable">
-        <thead><tr><th>#</th><th>누가</th><th>숫자</th><th>결과</th></tr></thead>
-        <tbody id="gsHistoryBody"></tbody>
-      </table>
     </div>
-
-    <!-- 라운드(세그먼트) 결과 -->
-    <div id="gsSegmentResult" class="hidden">
-      <div id="gsSegWinBox" class="resultBox winBox">
-        <p class="title">✓ <span id="gsSegWinner">-</span>님이 정답을 맞혔어요!</p>
-        <p id="gsSegWinRevealText" class="detail"></p>
-        <p id="gsSegWinCount" class="detail" style="margin-top:2px;"></p>
-      </div>
-      <div id="gsSegLoseBox" class="resultBox loseBox"><p class="title">9번의 기회를 모두 썼어요</p><p id="gsSegRevealText" class="detail"></p></div>
-      <div id="gsNextArea" class="hidden" style="margin-top:16px; text-align:center;">
-        <button id="gsNextBtn" class="primary" style="width:100%;">다음</button>
-        <p id="gsNextWaitNote" class="hidden detail" style="margin-top:8px;">상대방의 확인을 기다리는 중...</p>
-      </div>
-      <p id="gsSpectatorNote" class="hidden detail" style="text-align:center; margin-top:12px;">관전 중이에요 · 곧 다음 화면으로 넘어가요</p>
+    <div id="othelloJoinScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">오델로 참가</h1><button id="othelloJoinBackBtn">뒤로</button></div>
+      <input id="othelloJoinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" style="width:100%; margin-bottom:8px; letter-spacing:6px;" />
+      <p class="errMsg" id="othelloJoinErr"></p>
+      <button id="othelloJoinConfirmBtn" class="primary" style="width:100%;">참가하기</button>
     </div>
-
-    <!-- 최종 결과 -->
-    <div id="gsFinalResult" class="hidden">
-      <div id="gsFinalWinBox" class="resultBox winBox"><p class="title">🏆 <span id="gsFinalWinner">-</span>님 승리!</p><p id="gsFinalWinDetail" class="detail"></p></div>
-      <div id="gsFinalDrawBox" class="resultBox drawBox"><p class="title">무승부예요</p></div>
-      <button id="gameBackToRoleBtn" class="primary" style="width:100%; margin-top:16px;">처음으로</button>
+    <div id="othelloWaitScreen" class="hidden" style="text-align:center; padding:2rem 0;">
+      <div class="roomCodeBox"><p class="roomCodeLabel">방 코드</p><p id="othelloWaitCode" class="roomCodeValue">----</p></div>
+      <p style="font-size:14px; color:#444; margin:0;">상대방을 기다리는 중...</p>
+      <button id="othelloWaitLeaveBtn" style="margin-top:16px;">나가기</button>
     </div>
-
-    <div class="chatBox">
-      <div class="chatHeader">채팅</div>
-      <div id="gameChatList" class="chatList"></div>
-      <div class="chatInputRow">
-        <input id="gameChatInput" type="text" maxlength="200" placeholder="메시지 입력" />
-        <button id="gameChatSendBtn">전송</button>
+    <div id="othelloGameScreen" class="hidden">
+      <div class="header-row" style="margin-bottom:8px;">
+        <p style="margin:0; font-size:13px; color:#6b6b66;">방: <b id="othelloGameCode">----</b></p>
+        <button id="othelloGameLeaveBtn">나가기</button>
+      </div>
+      <div id="othelloTurnBanner" class="turnBanner">연결 중...</div>
+      <div class="scoreRow">
+        <div class="scoreBox"><div class="othelloStone black" style="width:20px;height:20px;"></div><b id="blackScore">2</b></div>
+        <div class="scoreBox"><div class="othelloStone white" style="width:20px;height:20px;"></div><b id="whiteScore">2</b></div>
+      </div>
+      <div class="boardWrap"><div id="othelloBoard" class="othelloBoard"></div></div>
+      <div id="othelloResultBox" class="resultBox winBox hidden"><p class="title" id="othelloResultText"></p><button id="othelloPlayAgainBtn" style="margin-top:8px;">다시 하기</button></div>
+      <div class="chatBox">
+        <div class="chatHeader">채팅</div>
+        <div id="othelloChatList" class="chatList"></div>
+        <div class="chatInputRow">
+          <input id="othelloChatInput" type="text" maxlength="200" placeholder="메시지 입력" />
+          <button id="othelloChatSendBtn">전송</button>
+        </div>
       </div>
     </div>
   </div>
 
 </div>
-
 <script>
 const SUPABASE_URL = 'https://phyzusbvjkgwuupunwma.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoeXp1c2J2amtnd3V1cHVud21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDA5MzIsImV4cCI6MjA5ODM3NjkzMn0.lOgwyVY7wjZH_NrBslFp6iwtPfczuh0DrI_PuqlB_Ek';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const MAX_TRIES = 9;
 let currentUser = null;
-let roomCode = '';
-let pendingCount = 0;
-let currentGameRow = null;
-let currentSegmentIndex = 0;
-let enteredGame = false;
-let mySecretCache = {};
-let gamesChannel = null, segmentsChannel = null, guessesChannel = null, chatChannel = null;
-let typingDebounce = null;
+let activeChannels = [];
 
-function show(id){
-  ['loginScreen','roleScreen','createCountScreen','leaderboardScreen','guestJoin','lobbyScreen','gameScreen'].forEach(function(s){
-    document.getElementById(s).classList.toggle('hidden', s !== id);
-  });
-}
-function genCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
-function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function genCode(){ return String(Math.floor(1000+Math.random()*9000)); }
+function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+function saveUser(){ localStorage.setItem('nb_user', JSON.stringify(currentUser)); }
+function clearAllChannels(){ activeChannels.forEach(function(c){ try{ supa.removeChannel(c); }catch(e){} }); activeChannels=[]; }
+function addChannel(c){ activeChannels.push(c); return c; }
 
-function saveUserLocal(){ localStorage.setItem('nb_user', JSON.stringify(currentUser)); }
-function saveActiveRoom(){ localStorage.setItem('nb_active_room', roomCode); }
-function clearActiveRoom(){ localStorage.removeItem('nb_active_room'); }
+const SECTIONS = ['loginScreen','homeScreen','leaderboardScreen','baseballSection','omokSection','othelloSection'];
+function showSection(id){ SECTIONS.forEach(function(s){ document.getElementById(s).classList.toggle('hidden', s!==id); }); }
 
-function renderStatsBar(){
-  const total = currentUser.wins + currentUser.losses;
-  const rate = total > 0 ? Math.round((currentUser.wins / total) * 1000) / 10 : 0;
-  document.getElementById('statsUsername').textContent = currentUser.username;
-  document.getElementById('statsWins').textContent = currentUser.wins;
-  document.getElementById('statsLosses').textContent = currentUser.losses;
-  document.getElementById('statsRate').textContent = rate + '%';
-}
-async function refreshCurrentUser(){
-  const { data } = await supa.from('users').select('username,wins,losses').eq('username', currentUser.username).single();
-  if(data){ currentUser.wins = data.wins; currentUser.losses = data.losses; renderStatsBar(); }
-}
-
-/* ---------- 로그인 ---------- */
+/* ========== 로그인 ========== */
 async function doLogin(){
   const uname = document.getElementById('loginUsername').value.trim();
   const pwd = document.getElementById('loginPassword').value.trim();
   const err = document.getElementById('loginErr');
-  if(!/^[가-힣]{2,4}$/.test(uname)){ err.textContent = '아이디는 한글 2~4자로 입력하세요'; return; }
-  if(!/^\d{4}$/.test(pwd)){ err.textContent = '비밀번호는 숫자 4자리로 입력하세요'; return; }
-  err.textContent = '';
-  const { data: existing } = await supa.from('users').select('*').eq('username', uname).maybeSingle();
-  if(existing){
-    if(existing.password !== pwd){ err.textContent = '비밀번호가 일치하지 않습니다'; return; }
-    currentUser = { username: existing.username, password: pwd, wins: existing.wins, losses: existing.losses };
-  } else {
-    const { error: insertErr } = await supa.from('users').insert({ username: uname, password: pwd, wins: 0, losses: 0 });
-    if(insertErr){ err.textContent = '계정 생성에 실패했어요. 다시 시도해주세요'; return; }
-    currentUser = { username: uname, password: pwd, wins: 0, losses: 0 };
-  }
-  saveUserLocal();
-  enterRoleScreen();
+  if(!/^[가-힣]{2,4}$/.test(uname)){ err.textContent='아이디는 한글 2~4자로 입력하세요'; return; }
+  if(!/^\d{4}$/.test(pwd)){ err.textContent='비밀번호는 숫자 4자리로 입력하세요'; return; }
+  err.textContent='';
+  const {data:ex} = await supa.from('users').select('*').eq('username',uname).maybeSingle();
+  if(ex){ if(ex.password!==pwd){ err.textContent='비밀번호가 일치하지 않습니다'; return; } currentUser={username:ex.username,password:pwd,wins:ex.wins,losses:ex.losses}; }
+  else{ const {error:ie} = await supa.from('users').insert({username:uname,password:pwd,wins:0,losses:0}); if(ie){ err.textContent='계정 생성 실패. 다시 시도해주세요'; return; } currentUser={username:uname,password:pwd,wins:0,losses:0}; }
+  saveUser();
+  enterHome();
 }
-function logout(){
-  localStorage.removeItem('nb_user'); localStorage.removeItem('nb_active_room');
-  currentUser = null;
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-  show('loginScreen');
-}
+function logout(){ localStorage.removeItem('nb_user'); localStorage.removeItem('nb_active_room'); currentUser=null; document.getElementById('loginUsername').value=''; document.getElementById('loginPassword').value=''; showSection('loginScreen'); }
 async function deleteAccount(){
-  const ok = confirm(currentUser.username + ' 계정을 정말 삭제하시겠어요? 전적 기록도 함께 사라지고 되돌릴 수 없어요.');
-  if(!ok) return;
-  const { data, error } = await supa.from('users').delete().eq('username', currentUser.username).select();
-  if(error){ alert('계정 삭제에 실패했어요. 다시 시도해주세요.'); return; }
-  if(!data || data.length === 0){ alert('계정을 찾지 못해 삭제하지 못했어요.'); return; }
-  localStorage.removeItem('nb_user'); localStorage.removeItem('nb_active_room');
-  currentUser = null;
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-  alert('계정이 삭제되었어요.');
-  show('loginScreen');
+  if(!confirm(currentUser.username+' 계정을 정말 삭제하시겠어요?')) return;
+  const {data,error} = await supa.from('users').delete().eq('username',currentUser.username).select();
+  if(error||!data||data.length===0){ alert('삭제 실패. 다시 시도해주세요.'); return; }
+  localStorage.removeItem('nb_user'); localStorage.removeItem('nb_active_room'); currentUser=null;
+  document.getElementById('loginUsername').value=''; document.getElementById('loginPassword').value='';
+  alert('계정이 삭제되었어요.'); showSection('loginScreen');
 }
 
-function enterRoleScreen(){
-  renderStatsBar();
-  const activeCode = localStorage.getItem('nb_active_room');
-  document.getElementById('resumeRoomBtn').classList.toggle('hidden', !activeCode);
-  unsubscribeAll();
-  show('roleScreen');
+function enterHome(){
+  document.getElementById('statsUsername').textContent = currentUser.username;
+  showSection('homeScreen');
+  bCheckResume();
 }
 
-function unsubscribeAll(){
-  if(gamesChannel){ supa.removeChannel(gamesChannel); gamesChannel = null; }
-  if(segmentsChannel){ supa.removeChannel(segmentsChannel); segmentsChannel = null; }
-  if(guessesChannel){ supa.removeChannel(guessesChannel); guessesChannel = null; }
-  if(chatChannel){ supa.removeChannel(chatChannel); chatChannel = null; }
+async function refreshUser(){
+  const {data} = await supa.from('users').select('wins,losses').eq('username',currentUser.username).single();
+  if(data){ currentUser.wins=data.wins; currentUser.losses=data.losses; saveUser(); }
 }
 
-function leaveGame(){
-  unsubscribeAll();
-  clearActiveRoom();
-  roomCode = ''; currentGameRow = null; currentSegmentIndex = 0; enteredGame = false;
-  refreshCurrentUser();
-  enterRoleScreen();
-}
-
-/* ---------- 랭킹 ---------- */
-let leaderboardTab = 'wins';
-function goLeaderboard(){ leaderboardTab = 'wins'; updateTabButtons(); loadLeaderboard(); show('leaderboardScreen'); }
-function updateTabButtons(){
-  document.getElementById('tabWinsBtn').classList.toggle('active', leaderboardTab === 'wins');
-  document.getElementById('tabRateBtn').classList.toggle('active', leaderboardTab === 'rate');
-}
+/* ========== 랭킹 ========== */
+let lbTab = 'wins';
+function goLeaderboard(){ lbTab='wins'; updateLbTabs(); loadLeaderboard(); showSection('leaderboardScreen'); }
+function updateLbTabs(){ document.getElementById('tabWinsBtn').classList.toggle('active',lbTab==='wins'); document.getElementById('tabRateBtn').classList.toggle('active',lbTab==='rate'); }
 async function loadLeaderboard(){
-  const { data, error } = await supa.from('users').select('username,wins,losses');
-  const listEl = document.getElementById('leaderboardList');
-  const emptyEl = document.getElementById('leaderboardEmpty');
-  if(error || !data || data.length === 0){ listEl.innerHTML = ''; emptyEl.classList.remove('hidden'); return; }
+  const {data} = await supa.from('users').select('username,wins,losses');
+  const listEl=document.getElementById('leaderboardList'); const emptyEl=document.getElementById('leaderboardEmpty');
+  if(!data||data.length===0){ listEl.innerHTML=''; emptyEl.classList.remove('hidden'); return; }
   emptyEl.classList.add('hidden');
-  let rows = data.map(function(u){ const total=u.wins+u.losses; return { username:u.username, wins:u.wins, losses:u.losses, rate: total>0?(u.wins/total):-1, total: total }; });
-  if(leaderboardTab === 'wins') rows.sort(function(a,b){ return b.wins - a.wins; });
-  else rows.sort(function(a,b){ return b.rate - a.rate; });
-  listEl.innerHTML = '';
-  rows.forEach(function(r, idx){
-    const rank = idx+1;
-    const rankClass = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-    const ratePct = r.total>0 ? Math.round(r.rate*1000)/10 : 0;
-    const div = document.createElement('div'); div.className='rankRow';
-    div.innerHTML = '<div class="rankLeft"><span class="rankNum '+rankClass+'">'+rank+'</span><span>'+r.username+'</span></div><span>'+r.wins+'승 '+r.losses+'패 · '+ratePct+'%</span>';
-    listEl.appendChild(div);
-  });
+  let rows=data.map(function(u){ const t=u.wins+u.losses; return {username:u.username,wins:u.wins,losses:u.losses,rate:t>0?(u.wins/t):-1,total:t}; });
+  if(lbTab==='wins') rows.sort(function(a,b){ return b.wins-a.wins; }); else rows.sort(function(a,b){ return b.rate-a.rate; });
+  listEl.innerHTML='';
+  rows.forEach(function(r,idx){ const rank=idx+1; const rc=rank===1?'top1':rank===2?'top2':rank===3?'top3':''; const rp=r.total>0?Math.round(r.rate*1000)/10:0; const d=document.createElement('div'); d.className='rankRow'; d.innerHTML='<div class="rankLeft"><span class="rankNum '+rc+'">'+rank+'</span><span>'+r.username+'</span></div><span>'+r.wins+'승 '+r.losses+'패 · '+rp+'%</span>'; listEl.appendChild(d); });
 }
 
-/* ---------- 방 생성 / 참가 ---------- */
-function goCreateScreen(){ show('createCountScreen'); }
-function goJoinScreen(){ show('guestJoin'); }
+/* ========== 숫자야구 ========== */
+let bRoomCode='', bEnteredGame=false, bSegmentIndex=0, bCurrentGame=null, bMySecretCache={};
 
-async function createGame(count){
-  const mode = count === 2 ? 'duel' : 'group';
-  for(let attempt=0; attempt<5; attempt++){
-    const code = genCode();
-    const { error } = await supa.from('games').insert({
-      room_code: code, mode: mode, max_players: count, status: 'waiting', players: [{username: currentUser.username}]
-    });
-    if(!error){
-      roomCode = code; saveActiveRoom();
-      enterLobby();
-      return;
-    }
+function bShowSub(id){
+  ['bRoleScreen','bCreateCountScreen','bJoinScreen','bLobbyScreen','bGameScreen'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); });
+}
+function bUpdateStats(){
+  const t=currentUser.wins+currentUser.losses; const r=t>0?Math.round((currentUser.wins/t)*1000)/10:0;
+  document.getElementById('bStatsWins').textContent=currentUser.wins;
+  document.getElementById('bStatsLosses').textContent=currentUser.losses;
+  document.getElementById('bStatsRate').textContent=r+'%';
+}
+function bCheckResume(){
+  const code=localStorage.getItem('nb_active_room');
+  document.getElementById('bResumeBtn').classList.toggle('hidden',!code);
+}
+function enterBaseball(){ showSection('baseballSection'); bUpdateStats(); bCheckResume(); bShowSub('bRoleScreen'); }
+function bLeaveToRole(){ clearAllChannels(); bRoomCode=''; bEnteredGame=false; bSegmentIndex=0; bCurrentGame=null; localStorage.removeItem('nb_active_room'); refreshUser().then(function(){ bUpdateStats(); bCheckResume(); bShowSub('bRoleScreen'); }); }
+
+async function bCreateGame(count){
+  const mode=count===2?'duel':'group';
+  for(let i=0;i<5;i++){
+    const code=genCode();
+    const {error}=await supa.from('games').insert({room_code:code,mode:mode,max_players:count,status:'waiting',players:[{username:currentUser.username}]});
+    if(!error){ bRoomCode=code; localStorage.setItem('nb_active_room',code); bEnterLobby(); return; }
   }
-  alert('방 생성에 실패했어요. 다시 시도해주세요.');
+  alert('방 생성 실패. 다시 시도해주세요.');
 }
 
-async function joinRoom(){
-  const code = document.getElementById('joinCodeInput').value.trim();
-  const err = document.getElementById('joinErr');
-  if(!/^\d{4}$/.test(code)){ err.textContent = '4자리 방 코드를 입력하세요'; return; }
-  const { data, error } = await supa.from('games').select('*').eq('room_code', code).maybeSingle();
-  if(error || !data){ err.textContent = '해당 방을 찾을 수 없어요. 코드를 확인해주세요'; return; }
-  const already = (data.players || []).some(function(p){ return p.username === currentUser.username; });
-  if(!already){
-    if(data.status !== 'waiting'){ err.textContent = '이미 시작된 게임이에요. 관전으로 참가해보세요'; return; }
-    if((data.players || []).length >= data.max_players){ err.textContent = '방 인원이 가득 찼어요. 관전으로 참가해보세요'; return; }
-    const newPlayers = (data.players || []).concat([{ username: currentUser.username }]);
-    await supa.from('games').update({ players: newPlayers }).eq('room_code', code);
-  }
-  err.textContent = '';
-  roomCode = code; saveActiveRoom();
-  if(data.status === 'waiting') enterLobby();
-  else { enteredGame = true; currentSegmentIndex = data.current_segment; enterGame(); }
-}
-
-async function joinAsSpectator(){
-  const code = document.getElementById('joinCodeInput').value.trim();
-  const err = document.getElementById('joinErr');
-  if(!/^\d{4}$/.test(code)){ err.textContent = '4자리 방 코드를 입력하세요'; return; }
-  const { data, error } = await supa.from('games').select('*').eq('room_code', code).maybeSingle();
-  if(error || !data){ err.textContent = '해당 방을 찾을 수 없어요. 코드를 확인해주세요'; return; }
-  const isPlayer = (data.players || []).some(function(p){ return p.username === currentUser.username; });
-  if(!isPlayer){
-    const already = (data.spectators || []).includes(currentUser.username);
-    if(!already){
-      const newSpec = (data.spectators || []).concat([currentUser.username]);
-      await supa.from('games').update({ spectators: newSpec }).eq('room_code', code);
-    }
-  }
-  err.textContent = '';
-  roomCode = code; saveActiveRoom();
-  if(data.status === 'waiting') enterLobby();
-  else { enteredGame = true; currentSegmentIndex = data.current_segment; enterGame(); }
-}
-
-/* ---------- 대기실 ---------- */
-function enterLobby(){
-  show('lobbyScreen');
-  document.getElementById('lobbyRoomCode').textContent = roomCode;
-  subscribeGames();
-}
-
-function subscribeGames(){
-  if(gamesChannel){ supa.removeChannel(gamesChannel); }
-  gamesChannel = supa.channel('games-' + roomCode)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: 'room_code=eq.' + roomCode },
-      function(payload){ handleGameRow(payload.new); })
-    .subscribe();
-  supa.from('games').select('*').eq('room_code', roomCode).single().then(function(res){ if(res.data) handleGameRow(res.data); });
-}
-
-async function handleGameRow(row){
-  currentGameRow = row;
-  if(row.status === 'waiting'){
-    renderLobby(row);
-    const creator = (row.players || [])[0];
-    if(creator && creator.username === currentUser.username && (row.players || []).length === row.max_players){
-      await initializeFirstSegment(row);
-    }
-    return;
-  }
-  if(!enteredGame){
-    enteredGame = true;
-    currentSegmentIndex = row.current_segment;
-    enterGame();
-  }
-}
-
-function renderLobby(row){
-  document.getElementById('lobbyCount').textContent = (row.players || []).length;
-  document.getElementById('lobbyMax').textContent = row.max_players;
-  const listEl = document.getElementById('lobbyPlayerList');
-  listEl.innerHTML = '';
-  (row.players || []).forEach(function(p, idx){
-    const div = document.createElement('div'); div.className = 'playerRow';
-    div.innerHTML = '<span>' + p.username + '</span>' + (idx===0 ? '<span class="playerBadge">방장</span>' : '');
-    listEl.appendChild(div);
-  });
-  const specEl = document.getElementById('lobbySpectatorNote');
-  const specCount = (row.spectators || []).length;
-  if(specCount > 0){ specEl.textContent = '관전자 ' + specCount + '명 입장해 있어요'; specEl.classList.remove('hidden'); }
-  else { specEl.classList.add('hidden'); }
-}
-
-async function initializeFirstSegment(row){
-  const players = row.players || [];
-  let hostUsername, guessOrder;
-  if(row.mode === 'duel'){
-    const shuffled = shuffle(players.map(function(p){ return p.username; }));
-    hostUsername = shuffled[0];
-    guessOrder = [shuffled[1]];
+async function bJoinRoom(spectate){
+  const code=document.getElementById('bJoinCodeInput').value.trim();
+  const err=document.getElementById('bJoinErr');
+  if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; }
+  const {data,error}=await supa.from('games').select('*').eq('room_code',code).maybeSingle();
+  if(error||!data){ err.textContent='해당 방을 찾을 수 없어요'; return; }
+  err.textContent=''; bRoomCode=code; localStorage.setItem('nb_active_room',code);
+  if(spectate){
+    const isPlayer=(data.players||[]).some(function(p){ return p.username===currentUser.username; });
+    if(!isPlayer){ const ns=(data.spectators||[]).concat([currentUser.username]); await supa.from('games').update({spectators:ns}).eq('room_code',code); }
   } else {
-    hostUsername = players[0].username;
-    guessOrder = shuffle(players.slice(1).map(function(p){ return p.username; }));
+    const already=(data.players||[]).some(function(p){ return p.username===currentUser.username; });
+    if(!already){
+      if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요. 관전으로 참가하세요'; return; }
+      if((data.players||[]).length>=data.max_players){ err.textContent='방이 가득 찼어요. 관전으로 참가하세요'; return; }
+      await supa.from('games').update({players:(data.players||[]).concat([{username:currentUser.username}])}).eq('room_code',code);
+    }
   }
-  const { error: segErr } = await supa.from('segments').insert({
-    room_code: roomCode, segment_index: 0, host_username: hostUsername, guess_order: guessOrder, turn_index: 0, status: 'awaiting_secret'
-  });
-  if(segErr){ return; }
-  await supa.from('games').update({ status: 'active', current_segment: 0 }).eq('room_code', roomCode);
+  if(data.status==='waiting') bEnterLobby();
+  else { bEnteredGame=true; bSegmentIndex=data.current_segment||0; bEnterGame(); }
 }
 
-/* ---------- 게임 화면 ---------- */
-function enterGame(){
-  show('gameScreen');
-  document.getElementById('gameRoomCode').textContent = roomCode;
-  subscribeSegmentsAndGuesses();
-  subscribeChat();
-  loadChatHistory();
-  loadCurrentSegment();
+function bEnterLobby(){
+  bShowSub('bLobbyScreen');
+  document.getElementById('bLobbyRoomCode').textContent=bRoomCode;
+  const ch=addChannel(supa.channel('b-games-'+bRoomCode).on('postgres_changes',{event:'*',schema:'public',table:'games',filter:'room_code=eq.'+bRoomCode},function(p){ bHandleGameRow(p.new); }).subscribe());
+  supa.from('games').select('*').eq('room_code',bRoomCode).single().then(function(r){ if(r.data) bHandleGameRow(r.data); });
 }
 
-function subscribeSegmentsAndGuesses(){
-  if(segmentsChannel){ supa.removeChannel(segmentsChannel); }
-  segmentsChannel = supa.channel('segments-' + roomCode)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'segments', filter: 'room_code=eq.' + roomCode },
-      function(payload){
-        if(payload.new.segment_index === currentSegmentIndex){
-          loadCurrentSegment();
-        }
-      })
-    .subscribe();
-
-  if(guessesChannel){ supa.removeChannel(guessesChannel); }
-  guessesChannel = supa.channel('guesses-' + roomCode)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'guesses', filter: 'room_code=eq.' + roomCode },
-      function(payload){
-        if(payload.new.segment_index === currentSegmentIndex){ loadCurrentSegment(); }
-      })
-    .subscribe();
-}
-
-async function loadCurrentSegment(){
-  const { data: game } = await supa.from('games').select('*').eq('room_code', roomCode).single();
-  if(game) currentGameRow = game;
-  const { data: seg } = await supa.from('segments').select('*').eq('room_code', roomCode).eq('segment_index', currentSegmentIndex).maybeSingle();
-  const { data: guessList } = await supa.from('guesses').select('*').eq('room_code', roomCode).eq('segment_index', currentSegmentIndex).order('created_at', { ascending: true });
-  renderGameScreen(currentGameRow, seg, guessList || []);
-}
-
-function renderGameScreen(game, seg, guessList){
-  ['gsSecretForm','gsWaitingSecret','gsPlay','gsSegmentResult','gsFinalResult'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
-
-  if(!seg){
-    if(game && game.status === 'finished'){ renderFinalResult(game); }
+async function bHandleGameRow(row){
+  bCurrentGame=row;
+  if(row.status==='waiting'){
+    bRenderLobby(row);
+    const creator=(row.players||[])[0];
+    if(creator&&creator.username===currentUser.username&&(row.players||[]).length===row.max_players) await bInitFirstSegment(row);
     return;
   }
+  if(!bEnteredGame){ bEnteredGame=true; bSegmentIndex=row.current_segment||0; bEnterGame(); }
+}
 
-  if(seg.status === 'awaiting_secret'){
-    if(currentUser.username === seg.host_username){
-      document.getElementById('gsSecretForm').classList.remove('hidden');
-    } else {
-      document.getElementById('gsWaitingSecret').classList.remove('hidden');
-      document.getElementById('gsWaitingHostName').textContent = seg.host_username;
-    }
+function bRenderLobby(row){
+  document.getElementById('bLobbyCount').textContent=(row.players||[]).length;
+  document.getElementById('bLobbyMax').textContent=row.max_players;
+  const listEl=document.getElementById('bLobbyPlayerList'); listEl.innerHTML='';
+  (row.players||[]).forEach(function(p,idx){ const d=document.createElement('div'); d.className='playerRow'; d.innerHTML='<span>'+p.username+'</span>'+(idx===0?'<span class="playerBadge">방장</span>':''); listEl.appendChild(d); });
+  const sn=document.getElementById('bLobbySpectatorNote'); const sc=(row.spectators||[]).length;
+  if(sc>0){ sn.textContent='관전자 '+sc+'명'; sn.classList.remove('hidden'); } else sn.classList.add('hidden');
+}
+
+async function bInitFirstSegment(row){
+  const players=row.players||[]; let hostUsername, guessOrder;
+  if(row.mode==='duel'){ const s=shuffle(players.map(function(p){ return p.username; })); hostUsername=s[0]; guessOrder=[s[1]]; }
+  else { hostUsername=players[0].username; guessOrder=shuffle(players.slice(1).map(function(p){ return p.username; })); }
+  const {error}=await supa.from('segments').insert({room_code:bRoomCode,segment_index:0,host_username:hostUsername,guess_order:guessOrder,turn_index:0,status:'awaiting_secret'});
+  if(!error) await supa.from('games').update({status:'active',current_segment:0}).eq('room_code',bRoomCode);
+}
+
+function bEnterGame(){
+  bShowSub('bGameScreen');
+  document.getElementById('bGameRoomCode').textContent=bRoomCode;
+  addChannel(supa.channel('b-segs-'+bRoomCode).on('postgres_changes',{event:'*',schema:'public',table:'segments',filter:'room_code=eq.'+bRoomCode},function(p){ if(p.new.segment_index===bSegmentIndex) bLoadSegment(); }).subscribe());
+  addChannel(supa.channel('b-guesses-'+bRoomCode).on('postgres_changes',{event:'*',schema:'public',table:'guesses',filter:'room_code=eq.'+bRoomCode},function(p){ if(p.new.segment_index===bSegmentIndex) bLoadSegment(); }).subscribe());
+  addChannel(supa.channel('b-game2-'+bRoomCode).on('postgres_changes',{event:'*',schema:'public',table:'games',filter:'room_code=eq.'+bRoomCode},function(p){ bCurrentGame=p.new; bLoadSegment(); }).subscribe());
+  bLoadChatHistory(); bSubscribeChat();
+  bLoadSegment();
+}
+
+async function bLoadSegment(){
+  const {data:game}=await supa.from('games').select('*').eq('room_code',bRoomCode).single(); if(game) bCurrentGame=game;
+  const {data:seg}=await supa.from('segments').select('*').eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex).maybeSingle();
+  const {data:gl}=await supa.from('guesses').select('*').eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex).order('created_at',{ascending:true});
+  bRenderGame(bCurrentGame,seg,gl||[]);
+}
+
+function bRenderGame(game,seg,gl){
+  ['bgsSecretForm','bgsWaitingSecret','bgsPlay','bgsSegmentResult','bgsFinalResult'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  if(!seg){ if(game&&game.status==='finished') bRenderFinal(game); return; }
+  if(seg.status==='awaiting_secret'){
+    if(currentUser.username===seg.host_username){ document.getElementById('bgsSecretForm').classList.remove('hidden'); }
+    else { document.getElementById('bgsWaitingSecret').classList.remove('hidden'); document.getElementById('bgsWaitingHostName').textContent=seg.host_username; }
     return;
   }
-
-  if(seg.status === 'pending'){
-    document.getElementById('gsPlay').classList.remove('hidden');
-    const isHost = currentUser.username === seg.host_username;
-    document.getElementById('gsHostSecretBox').classList.toggle('hidden', !isHost);
-    if(isHost){
-      const cached = mySecretCache[roomCode + '-' + seg.segment_index];
-      document.getElementById('gsMySecret').textContent = cached || '(표시 안됨)';
-    }
-    const currentTurnUser = seg.guess_order[seg.turn_index];
-    const isMyTurn = !isHost && currentTurnUser === currentUser.username;
-    document.getElementById('gsTurnBanner').textContent = isMyTurn ? '내 차례예요! 숫자를 입력하세요' : (currentTurnUser + '님의 차례입니다');
-    document.getElementById('gsInputRow').classList.toggle('hidden', !isMyTurn);
-    document.getElementById('gsTypingLabel').textContent = isMyTurn ? '내가' : (currentTurnUser + '님이 입력 중');
-    const typingVal = seg.guest_typing || '';
-    document.getElementById('gsTypingDisplay').textContent = [0,1,2,3].map(function(i){ return typingVal[i] || '—'; }).join(' ');
-    document.getElementById('gsTryCount').textContent = guessList.length;
-    renderGuessTable(guessList);
-  } else if(seg.status === 'finished'){
-    document.getElementById('gsSegmentResult').classList.remove('hidden');
-    document.getElementById('gsSegWinBox').style.display = 'none';
-    document.getElementById('gsSegLoseBox').style.display = 'none';
-    if(seg.outcome === 'win'){
-      document.getElementById('gsSegWinBox').style.display = 'block';
-      document.getElementById('gsSegWinner').textContent = seg.winner_username;
-      document.getElementById('gsSegWinRevealText').textContent = seg.revealed_secret ? ('정답은 ' + seg.revealed_secret + ' 였어요!') : '';
-      document.getElementById('gsSegWinCount').textContent = seg.win_guess_count ? (seg.win_guess_count + '번째 시도에서 맞혔어요') : '';
+  if(seg.status==='pending'){
+    document.getElementById('bgsPlay').classList.remove('hidden');
+    const isHost=currentUser.username===seg.host_username;
+    document.getElementById('bgsHostSecretBox').classList.toggle('hidden',!isHost);
+    if(isHost){ const c=bMySecretCache[bRoomCode+'-'+seg.segment_index]; document.getElementById('bgsMySecret').textContent=c||'(표시 안됨)'; }
+    const curTurn=seg.guess_order[seg.turn_index];
+    const isMyTurn=!isHost&&curTurn===currentUser.username;
+    document.getElementById('bgsTurnBanner').textContent=isMyTurn?'내 차례예요! 숫자를 입력하세요':(curTurn+'님의 차례입니다');
+    document.getElementById('bgsInputRow').classList.toggle('hidden',!isMyTurn);
+    document.getElementById('bgsTypingLabel').textContent=isMyTurn?'내가':(curTurn+'님이 입력 중');
+    const tv=seg.guest_typing||'';
+    document.getElementById('bgsTypingDisplay').textContent=[0,1,2,3].map(function(i){ return tv[i]||'—'; }).join(' ');
+    document.getElementById('bgsTryCount').textContent=gl.length;
+    bRenderHistory(gl);
+  } else if(seg.status==='finished'){
+    document.getElementById('bgsSegmentResult').classList.remove('hidden');
+    document.getElementById('bgsSegWinBox').style.display='none'; document.getElementById('bgsSegLoseBox').style.display='none';
+    if(seg.outcome==='win'){
+      document.getElementById('bgsSegWinBox').style.display='block';
+      document.getElementById('bgsSegWinner').textContent=seg.winner_username;
+      document.getElementById('bgsSegWinReveal').textContent=seg.revealed_secret?('정답은 '+seg.revealed_secret+' 였어요!'):'';
+      document.getElementById('bgsSegWinCount').textContent=seg.win_guess_count?(seg.win_guess_count+'번째 시도에서 맞혔어요'):'';
     } else {
-      document.getElementById('gsSegLoseBox').style.display = 'block';
-      document.getElementById('gsSegRevealText').textContent = seg.revealed_secret ? ('정답은 ' + seg.revealed_secret + ' 이었어요') : '';
+      document.getElementById('bgsSegLoseBox').style.display='block';
+      document.getElementById('bgsSegRevealText').textContent=seg.revealed_secret?('정답은 '+seg.revealed_secret+' 이었어요'):'';
     }
-
-    if(!game || game.mode !== 'duel'){
-      if(game && game.status === 'finished'){ renderFinalResult(game); }
-      return;
-    }
-
-    const participants = [seg.host_username].concat(seg.guess_order);
-    const readyArr = seg.ready_users || [];
-    const bothReady = participants.every(function(p){ return readyArr.includes(p); });
-    const isParticipant = participants.includes(currentUser.username);
-
-    if(bothReady){
-      if(seg.segment_index === 0){
-        currentSegmentIndex = 1;
-        loadCurrentSegment();
-      } else if(game.status === 'finished'){
-        renderFinalResult(game);
-      }
-      return;
-    }
-
-    document.getElementById('gsSpectatorNote').classList.toggle('hidden', isParticipant);
-    document.getElementById('gsNextArea').classList.toggle('hidden', !isParticipant);
-    if(isParticipant){
-      const iAmReady = readyArr.includes(currentUser.username);
-      document.getElementById('gsNextBtn').classList.toggle('hidden', iAmReady);
-      document.getElementById('gsNextWaitNote').classList.toggle('hidden', !iAmReady);
-    }
+    if(!game||game.mode!=='duel'){ if(game&&game.status==='finished') bRenderFinal(game); return; }
+    const participants=[seg.host_username].concat(seg.guess_order);
+    const readyArr=seg.ready_users||[];
+    const bothReady=participants.every(function(p){ return readyArr.includes(p); });
+    const isParticipant=participants.includes(currentUser.username);
+    if(bothReady){ if(seg.segment_index===0){ bSegmentIndex=1; bLoadSegment(); } else if(game.status==='finished') bRenderFinal(game); return; }
+    document.getElementById('bgsSpectatorNote').classList.toggle('hidden',isParticipant);
+    document.getElementById('bgsNextArea').classList.toggle('hidden',!isParticipant);
+    if(isParticipant){ const iAmReady=readyArr.includes(currentUser.username); document.getElementById('bgsNextBtn').classList.toggle('hidden',iAmReady); document.getElementById('bgsNextWaitNote').classList.toggle('hidden',!iAmReady); }
   }
 }
 
-async function clickNextReady(seg){
-  const readyArr = (seg.ready_users || []).slice();
-  if(!readyArr.includes(currentUser.username)) readyArr.push(currentUser.username);
-  await supa.from('segments').update({ ready_users: readyArr }).eq('room_code', roomCode).eq('segment_index', seg.segment_index);
-  loadCurrentSegment();
-}
-
-function renderGuessTable(guessList){
-  const emptyEl = document.getElementById('gsHistoryEmpty');
-  const tableEl = document.getElementById('gsHistoryTable');
-  if(guessList.length === 0){ emptyEl.style.display='block'; tableEl.style.display='none'; return; }
+function bRenderHistory(gl){
+  const emptyEl=document.getElementById('bgsHistoryEmpty'); const tableEl=document.getElementById('bgsHistoryTable');
+  if(gl.length===0){ emptyEl.style.display='block'; tableEl.style.display='none'; return; }
   emptyEl.style.display='none'; tableEl.style.display='table';
-  const tbody = document.getElementById('gsHistoryBody');
-  tbody.innerHTML = '';
-  guessList.slice().reverse().forEach(function(g, idx){
-    const n = guessList.length - idx;
-    const resultText = g.pending ? '결과 대기중' : (g.strikes === 4 ? '4 스트라이크' : (g.strikes === 0 && g.balls === 0) ? '아웃' : (g.strikes + '스트라이크 ' + g.balls + '볼'));
-    const tr = document.createElement('tr');
-    if(g.pending) tr.style.color = '#999';
-    tr.innerHTML = '<td>'+n+'</td><td>'+g.by_username+'</td><td>'+g.val+'</td><td>'+resultText+'</td>';
+  const tbody=document.getElementById('bgsHistoryBody'); tbody.innerHTML='';
+  gl.slice().reverse().forEach(function(g,idx){
+    const n=gl.length-idx;
+    const rt=g.pending?'대기중':(g.strikes===4?'4스트라이크':(g.strikes===0&&g.balls===0)?'아웃':(g.strikes+'S '+g.balls+'B'));
+    const tr=document.createElement('tr'); if(g.pending) tr.style.color='#999';
+    tr.innerHTML='<td style="padding:5px 4px; border-bottom:1px solid #eee;">'+g.by_username+'</td><td style="padding:5px 4px; border-bottom:1px solid #eee; letter-spacing:2px;">'+g.val+'</td><td style="padding:5px 4px; border-bottom:1px solid #eee; text-align:right; font-weight:600;">'+rt+'</td>';
     tbody.appendChild(tr);
   });
 }
 
-function renderFinalResult(game){
-  document.getElementById('gsSegmentResult').classList.add('hidden');
-  document.getElementById('gsFinalResult').classList.remove('hidden');
-  document.getElementById('gsFinalWinBox').style.display = 'none';
-  document.getElementById('gsFinalDrawBox').style.display = 'none';
-  const outcome = game.final_outcome || {};
-  if(outcome.type === 'draw'){
-    document.getElementById('gsFinalDrawBox').style.display = 'block';
-  } else if(outcome.type === 'all_lose'){
-    document.getElementById('gsFinalWinBox').style.display = 'block';
-    document.getElementById('gsFinalWinner').textContent = '아무도';
-    document.getElementById('gsFinalWinDetail').textContent = '아무도 정답을 맞히지 못했어요';
-  } else if(outcome.type === 'win'){
-    document.getElementById('gsFinalWinBox').style.display = 'block';
-    document.getElementById('gsFinalWinner').textContent = outcome.winner;
-    let detail = outcome.loser ? (outcome.loser + '님은 못 맞혔어요') : '';
-    if(outcome.count0 !== undefined && outcome.count1 !== undefined){
-      detail = outcome.winner + '님 ' + Math.min(outcome.count0, outcome.count1) + '번 · ' + outcome.loser + '님 ' + Math.max(outcome.count0, outcome.count1) + '번 만에 맞힘';
-    }
-    document.getElementById('gsFinalWinDetail').textContent = detail;
+function bRenderFinal(game){
+  document.getElementById('bgsSegmentResult').classList.add('hidden');
+  document.getElementById('bgsFinalResult').classList.remove('hidden');
+  document.getElementById('bgsFinalWinBox').style.display='none'; document.getElementById('bgsFinalDrawBox').style.display='none';
+  const o=game.final_outcome||{};
+  if(o.type==='draw') document.getElementById('bgsFinalDrawBox').style.display='block';
+  else if(o.type==='all_lose'){ document.getElementById('bgsFinalWinBox').style.display='block'; document.getElementById('bgsFinalWinner').textContent='아무도'; document.getElementById('bgsFinalWinDetail').textContent='아무도 정답을 맞히지 못했어요'; }
+  else if(o.type==='win'){
+    document.getElementById('bgsFinalWinBox').style.display='block';
+    document.getElementById('bgsFinalWinner').textContent=o.winner;
+    let detail=o.loser?(o.loser+'님은 못 맞혔어요'):'';
+    if(o.count0!==undefined&&o.count1!==undefined) detail=o.winner+'님 '+Math.min(o.count0,o.count1)+'번 · '+o.loser+'님 '+Math.max(o.count0,o.count1)+'번';
+    document.getElementById('bgsFinalWinDetail').textContent=detail;
   }
-  clearActiveRoom();
-  refreshCurrentUser();
+  localStorage.removeItem('nb_active_room'); refreshUser().then(function(){ bUpdateStats(); });
 }
 
-async function segConfirmSecret(){
-  const val = document.getElementById('segSecretInput').value.trim();
-  const err = document.getElementById('segSecretErr');
-  if(!/^\d{4}$/.test(val)){ err.textContent = '4자리 숫자를 입력하세요'; return; }
-  const arr = val.split('').map(Number);
-  if(new Set(arr).size !== 4){ err.textContent = '중복되지 않는 숫자 4개를 입력하세요'; return; }
-  err.textContent = '';
-  const { error: secretErr } = await supa.from('room_secrets').insert({ room_code: roomCode, segment_index: currentSegmentIndex, secret: val });
-  if(secretErr){ err.textContent = '정답 저장에 실패했어요. 다시 시도해주세요'; return; }
-  mySecretCache[roomCode + '-' + currentSegmentIndex] = val;
-  document.getElementById('segSecretInput').value = '';
-  await supa.from('segments').update({ status: 'pending' }).eq('room_code', roomCode).eq('segment_index', currentSegmentIndex);
+async function bSegConfirmSecret(){
+  const val=document.getElementById('bSegSecretInput').value.trim(); const err=document.getElementById('bSegSecretErr');
+  if(!/^\d{4}$/.test(val)){ err.textContent='4자리 숫자를 입력하세요'; return; }
+  if(new Set(val.split('')).size!==4){ err.textContent='중복되지 않는 숫자 4개를 입력하세요'; return; }
+  err.textContent='';
+  const {error}=await supa.from('room_secrets').insert({room_code:bRoomCode,segment_index:bSegmentIndex,secret:val});
+  if(error){ err.textContent='정답 저장 실패. 다시 시도해주세요'; return; }
+  bMySecretCache[bRoomCode+'-'+bSegmentIndex]=val;
+  document.getElementById('bSegSecretInput').value='';
+  await supa.from('segments').update({status:'pending'}).eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex);
 }
 
-function updateTyping(val){
-  clearTimeout(typingDebounce);
-  typingDebounce = setTimeout(function(){
-    supa.from('segments').update({ guest_typing: val }).eq('room_code', roomCode).eq('segment_index', currentSegmentIndex);
-  }, 150);
+let bTypingDebounce=null;
+function bUpdateTyping(val){ clearTimeout(bTypingDebounce); bTypingDebounce=setTimeout(function(){ supa.from('segments').update({guest_typing:val}).eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex); },150); }
+
+async function bSubmitGuess(){
+  const val=document.getElementById('bgsGuessInput').value.trim(); const err=document.getElementById('bgsErrMsg');
+  if(!/^\d{4}$/.test(val)){ err.textContent='4자리 숫자를 입력하세요'; return; }
+  if(new Set(val.split('')).size!==4){ err.textContent='중복되지 않는 숫자 4개를 입력하세요'; return; }
+  err.textContent='';
+  const {error}=await supa.from('guesses').insert({room_code:bRoomCode,segment_index:bSegmentIndex,by_username:currentUser.username,val:val});
+  if(error){ err.textContent='제출 실패. 다시 시도해주세요'; return; }
+  await supa.from('segments').update({guest_typing:''}).eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex);
+  document.getElementById('bgsGuessInput').value='';
 }
 
-async function gsSubmitGuess(){
-  const val = document.getElementById('gsGuessInput').value.trim();
-  const err = document.getElementById('gsErrMsg');
-  if(!/^\d{4}$/.test(val)){ err.textContent = '4자리 숫자를 입력하세요'; return; }
-  const arr = val.split('').map(Number);
-  if(new Set(arr).size !== 4){ err.textContent = '중복되지 않는 숫자 4개를 입력하세요'; return; }
-  err.textContent = '';
-  const { error } = await supa.from('guesses').insert({ room_code: roomCode, segment_index: currentSegmentIndex, by_username: currentUser.username, val: val });
-  if(error){ err.textContent = '제출에 실패했어요. 다시 시도해주세요'; return; }
-  await supa.from('segments').update({ guest_typing: '' }).eq('room_code', roomCode).eq('segment_index', currentSegmentIndex);
-  document.getElementById('gsGuessInput').value = '';
+async function bClickNext(){
+  const {data:seg}=await supa.from('segments').select('*').eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex).single();
+  if(!seg) return;
+  const ra=(seg.ready_users||[]).slice(); if(!ra.includes(currentUser.username)) ra.push(currentUser.username);
+  await supa.from('segments').update({ready_users:ra}).eq('room_code',bRoomCode).eq('segment_index',bSegmentIndex);
+  bLoadSegment();
 }
 
-/* ---------- 채팅 ---------- */
-function subscribeChat(){
-  if(chatChannel){ supa.removeChannel(chatChannel); }
-  chatChannel = supa.channel('chat-' + roomCode)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_code=eq.' + roomCode },
-      function(payload){ appendChatMessage(payload.new); })
-    .subscribe();
-}
-async function loadChatHistory(){
-  const { data } = await supa.from('messages').select('*').eq('room_code', roomCode).order('created_at', { ascending: true }).limit(200);
-  const listEl = document.getElementById('gameChatList');
-  listEl.innerHTML = '';
-  (data || []).forEach(renderChatMessage);
-  listEl.scrollTop = listEl.scrollHeight;
-}
-function appendChatMessage(m){ renderChatMessage(m); const listEl = document.getElementById('gameChatList'); listEl.scrollTop = listEl.scrollHeight; }
-function renderChatMessage(m){
-  const listEl = document.getElementById('gameChatList');
-  const isMe = m.sender === currentUser.username;
-  const wrap = document.createElement('div'); wrap.className = 'chatMsg ' + (isMe ? 'me' : 'other');
-  if(!isMe){ const s = document.createElement('div'); s.className='chatMsgSender'; s.textContent=m.sender; wrap.appendChild(s); }
-  const t = document.createElement('div'); t.textContent = m.text; wrap.appendChild(t);
-  listEl.appendChild(wrap);
-}
-async function sendChat(){
-  const input = document.getElementById('gameChatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
-  await supa.from('messages').insert({ room_code: roomCode, sender: currentUser.username, text: text });
+async function bResumeGame(){
+  const code=localStorage.getItem('nb_active_room'); if(!code) return;
+  bRoomCode=code;
+  const {data:game}=await supa.from('games').select('*').eq('room_code',code).maybeSingle();
+  if(!game){ localStorage.removeItem('nb_active_room'); return; }
+  bCurrentGame=game;
+  if(game.status==='waiting') bEnterLobby();
+  else { bEnteredGame=true; bSegmentIndex=game.current_segment||0; bEnterGame(); }
 }
 
-/* ---------- 재입장 ---------- */
-async function resumeActiveRoom(){
-  const code = localStorage.getItem('nb_active_room');
-  if(!code) return;
-  roomCode = code;
-  const { data: game, error } = await supa.from('games').select('*').eq('room_code', roomCode).maybeSingle();
-  if(error || !game){ clearActiveRoom(); enterRoleScreen(); return; }
-  currentGameRow = game;
-  if(game.status === 'waiting'){ enterLobby(); return; }
-  enteredGame = true;
-  currentSegmentIndex = game.current_segment;
-  enterGame();
+function bSubscribeChat(){ addChannel(supa.channel('b-chat-'+bRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+bRoomCode},function(p){ bAppendChat(p.new); }).subscribe()); }
+async function bLoadChatHistory(){ const {data}=await supa.from('messages').select('*').eq('room_code',bRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('bGameChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ bRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
+function bAppendChat(m){ bRenderChatMsg(m); const el=document.getElementById('bGameChatList'); el.scrollTop=el.scrollHeight; }
+function bRenderChatMsg(m){ const el=document.getElementById('bGameChatList'); const isMe=m.sender===currentUser.username; const w=document.createElement('div'); w.className='chatMsg '+(isMe?'me':'other'); if(!isMe){ const s=document.createElement('div'); s.className='chatMsgSender'; s.textContent=m.sender; w.appendChild(s); } const t=document.createElement('div'); t.textContent=m.text; w.appendChild(t); el.appendChild(w); }
+async function bSendChat(){ const inp=document.getElementById('bGameChatInput'); const txt=inp.value.trim(); if(!txt) return; inp.value=''; await supa.from('messages').insert({room_code:bRoomCode,sender:currentUser.username,text:txt}); }
+
+/* ========== 오목 ========== */
+const OMOK_SIZE=15;
+let omokRoomCode='', omokMyColor='', omokBoard=[], omokChannel=null, omokChatChannel=null;
+
+function omokShowSub(id){
+  ['omokLobby','omokJoinScreen','omokWaitScreen','omokGameScreen'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); });
+}
+function enterOmok(){ showSection('omokSection'); omokShowSub('omokLobby'); }
+
+function omokInitBoard(){ omokBoard=[]; for(let i=0;i<OMOK_SIZE;i++){ omokBoard.push([]); for(let j=0;j<OMOK_SIZE;j++) omokBoard[i].push(null); } }
+
+async function omokCreate(){
+  for(let i=0;i<5;i++){
+    const code=genCode();
+    const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); }
+    const {error}=await supa.from('omok_games').insert({room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black',black_player:currentUser.username});
+    if(!error){ omokRoomCode=code; omokMyColor='black'; omokBoard=board; document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); omokSubscribeGame(); return; }
+  }
+  alert('방 생성 실패');
 }
 
+async function omokJoin(){
+  const code=document.getElementById('omokJoinCode').value.trim(); const err=document.getElementById('omokJoinErr');
+  if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; }
+  const {data,error}=await supa.from('omok_games').select('*').eq('room_code',code).maybeSingle();
+  if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; }
+  if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; }
+  err.textContent='';
+  omokRoomCode=code; omokMyColor='white'; omokBoard=data.board;
+  await supa.from('omok_games').update({status:'active',white_player:currentUser.username,players:data.players.concat([currentUser.username])}).eq('room_code',code);
+  omokSubscribeGame(); omokEnterGame(data);
+}
+
+function omokSubscribeGame(){
+  if(omokChannel){ supa.removeChannel(omokChannel); }
+  omokChannel=addChannel(supa.channel('omok-'+omokRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'omok_games',filter:'room_code=eq.'+omokRoomCode},function(p){ omokHandleUpdate(p.new); }).subscribe());
+}
+
+function omokHandleUpdate(row){
+  omokBoard=row.board;
+  if(row.status==='waiting') return;
+  if(document.getElementById('omokWaitScreen').classList.contains('hidden')===false){ omokEnterGame(row); return; }
+  omokRenderBoard(row); omokUpdateBanner(row);
+  if(row.status==='finished'){ omokShowResult(row); }
+}
+
+function omokEnterGame(row){
+  omokBoard=row.board;
+  document.getElementById('omokGameCode').textContent=omokRoomCode;
+  omokShowSub('omokGameScreen');
+  omokRenderBoard(row); omokUpdateBanner(row);
+  omokLoadChat(); omokSubscribeChat();
+  if(row.status==='finished') omokShowResult(row);
+}
+
+function omokUpdateBanner(row){
+  const blackName=row.black_player||'흑'; const whiteName=row.white_player||'백';
+  if(row.status==='finished'){ document.getElementById('omokTurnBanner').textContent='게임 종료'; return; }
+  const curName=row.current_turn==='black'?blackName:whiteName;
+  const isMyTurn=(row.current_turn===omokMyColor);
+  document.getElementById('omokTurnBanner').textContent=isMyTurn?'내 차례예요! ('+omokMyColor==='black'?'흑':'백'+'돌)':(curName+'님의 차례 ('+(row.current_turn==='black'?'흑':'백')+'돌)');
+}
+
+function omokRenderBoard(row){
+  const boardEl=document.getElementById('omokBoard');
+  boardEl.style.gridTemplateColumns='repeat('+OMOK_SIZE+', 28px)';
+  boardEl.innerHTML='';
+  const isMyTurn=row.current_turn===omokMyColor&&row.status==='active';
+  for(let r=0;r<OMOK_SIZE;r++){
+    for(let c=0;c<OMOK_SIZE;c++){
+      const cell=document.createElement('div'); cell.className='cell';
+      const val=row.board[r][c];
+      if(val){ const s=document.createElement('div'); s.className='stone '+val; cell.appendChild(s); }
+      else if(isMyTurn){
+        const rc=r, cc=c;
+        cell.addEventListener('click',function(){ omokPlaceStone(rc,cc,row); });
+      }
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+async function omokPlaceStone(r,c,row){
+  if(row.board[r][c]) return;
+  const newBoard=row.board.map(function(row){ return row.slice(); });
+  newBoard[r][c]=omokMyColor;
+  const won=omokCheckWin(newBoard,r,c,omokMyColor);
+  const nextTurn=omokMyColor==='black'?'white':'black';
+  const update={board:newBoard,current_turn:nextTurn};
+  if(won){ update.status='finished'; update.winner=currentUser.username; }
+  await supa.from('omok_games').update(update).eq('room_code',omokRoomCode);
+}
+
+function omokCheckWin(board,r,c,color){
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(const [dr,dc] of dirs){
+    let count=1;
+    for(let i=1;i<5;i++){ const nr=r+dr*i,nc=c+dc*i; if(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color) count++; else break; }
+    for(let i=1;i<5;i++){ const nr=r-dr*i,nc=c-dc*i; if(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color) count++; else break; }
+    if(count>=5) return true;
+  }
+  return false;
+}
+
+function omokShowResult(row){
+  const rBox=document.getElementById('omokResultBox'); rBox.classList.remove('hidden');
+  rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':'loseBox');
+  rBox.style.display='block';
+  document.getElementById('omokResultText').textContent=row.winner===currentUser.username?'🏆 승리했어요!':'😢 패배했어요';
+}
+
+function omokLeave(){ if(omokChannel){ supa.removeChannel(omokChannel); omokChannel=null; } if(omokChatChannel){ supa.removeChannel(omokChatChannel); omokChatChannel=null; } omokRoomCode=''; omokMyColor=''; enterOmok(); }
+function omokSubscribeChat(){ omokChatChannel=addChannel(supa.channel('omok-chat-'+omokRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+omokRoomCode},function(p){ omokAppendChat(p.new); }).subscribe()); }
+async function omokLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',omokRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('omokChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ omokRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
+function omokAppendChat(m){ omokRenderChatMsg(m); const el=document.getElementById('omokChatList'); el.scrollTop=el.scrollHeight; }
+function omokRenderChatMsg(m){ const el=document.getElementById('omokChatList'); const isMe=m.sender===currentUser.username; const w=document.createElement('div'); w.className='chatMsg '+(isMe?'me':'other'); if(!isMe){ const s=document.createElement('div'); s.className='chatMsgSender'; s.textContent=m.sender; w.appendChild(s); } const t=document.createElement('div'); t.textContent=m.text; w.appendChild(t); el.appendChild(w); }
+async function omokSendChat(){ const inp=document.getElementById('omokChatInput'); const txt=inp.value.trim(); if(!txt) return; inp.value=''; await supa.from('messages').insert({room_code:omokRoomCode,sender:currentUser.username,text:txt}); }
+
+/* ========== 오델로 ========== */
+const OT_SIZE=8;
+const OT_DIRS=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+let otRoomCode='', otMyColor='', otBoard=[], otChannel=null, otChatChannel=null;
+
+function otShowSub(id){ ['othelloLobby','othelloJoinScreen','othelloWaitScreen','othelloGameScreen'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); }); }
+function enterOthello(){ showSection('othelloSection'); otShowSub('othelloLobby'); }
+
+function otInitBoard(){
+  const b=[]; for(let i=0;i<OT_SIZE;i++){ b.push([]); for(let j=0;j<OT_SIZE;j++) b[i].push(null); }
+  b[3][3]='white'; b[3][4]='black'; b[4][3]='black'; b[4][4]='white';
+  return b;
+}
+
+async function otCreate(){
+  for(let i=0;i<5;i++){
+    const code=genCode(); const board=otInitBoard();
+    const {error}=await supa.from('othello_games').insert({room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black',black_player:currentUser.username});
+    if(!error){ otRoomCode=code; otMyColor='black'; otBoard=board; document.getElementById('othelloWaitCode').textContent=code; otShowSub('othelloWaitScreen'); otSubscribeGame(); return; }
+  }
+  alert('방 생성 실패');
+}
+
+async function otJoin(){
+  const code=document.getElementById('othelloJoinCode').value.trim(); const err=document.getElementById('othelloJoinErr');
+  if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; }
+  const {data,error}=await supa.from('othello_games').select('*').eq('room_code',code).maybeSingle();
+  if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; }
+  if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; }
+  err.textContent=''; otRoomCode=code; otMyColor='white'; otBoard=data.board;
+  await supa.from('othello_games').update({status:'active',white_player:currentUser.username,players:data.players.concat([currentUser.username])}).eq('room_code',code);
+  otSubscribeGame(); otEnterGame(data);
+}
+
+function otSubscribeGame(){
+  if(otChannel){ supa.removeChannel(otChannel); }
+  otChannel=addChannel(supa.channel('othello-'+otRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'othello_games',filter:'room_code=eq.'+otRoomCode},function(p){ otHandleUpdate(p.new); }).subscribe());
+}
+
+function otHandleUpdate(row){
+  otBoard=row.board;
+  if(row.status==='waiting') return;
+  if(document.getElementById('othelloWaitScreen').classList.contains('hidden')===false){ otEnterGame(row); return; }
+  otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row);
+  if(row.status==='finished') otShowResult(row);
+}
+
+function otEnterGame(row){
+  otBoard=row.board;
+  document.getElementById('othelloGameCode').textContent=otRoomCode;
+  otShowSub('othelloGameScreen');
+  otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row);
+  otLoadChat(); otSubscribeChat();
+  if(row.status==='finished') otShowResult(row);
+}
+
+function otUpdateBanner(row){
+  if(row.status==='finished'){ document.getElementById('othelloTurnBanner').textContent='게임 종료'; return; }
+  const isMyTurn=row.current_turn===otMyColor;
+  const curName=row.current_turn==='black'?(row.black_player||'흑'):(row.white_player||'백');
+  document.getElementById('othelloTurnBanner').textContent=isMyTurn?'내 차례예요!':(curName+'님의 차례');
+}
+
+function otUpdateScore(row){
+  let black=0, white=0;
+  for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++){ if(row.board[r][c]==='black') black++; else if(row.board[r][c]==='white') white++; }
+  document.getElementById('blackScore').textContent=black; document.getElementById('whiteScore').textContent=white;
+}
+
+function otGetFlips(board,r,c,color){
+  const opp=color==='black'?'white':'black'; const flips=[];
+  for(const [dr,dc] of OT_DIRS){
+    const line=[]; let nr=r+dr, nc=c+dc;
+    while(nr>=0&&nr<OT_SIZE&&nc>=0&&nc<OT_SIZE&&board[nr][nc]===opp){ line.push([nr,nc]); nr+=dr; nc+=dc; }
+    if(line.length>0&&nr>=0&&nr<OT_SIZE&&nc>=0&&nc<OT_SIZE&&board[nr][nc]===color) flips.push(...line);
+  }
+  return flips;
+}
+
+function otGetValidMoves(board,color){
+  const moves=[];
+  for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++) if(!board[r][c]&&otGetFlips(board,r,c,color).length>0) moves.push([r,c]);
+  return moves;
+}
+
+function otRenderBoard(row){
+  const boardEl=document.getElementById('othelloBoard');
+  boardEl.style.gridTemplateColumns='repeat('+OT_SIZE+', 40px)';
+  boardEl.innerHTML='';
+  const isMyTurn=row.current_turn===otMyColor&&row.status==='active';
+  const validMoves=isMyTurn?otGetValidMoves(row.board,otMyColor):[];
+  const validSet=new Set(validMoves.map(function(m){ return m[0]+','+m[1]; }));
+  for(let r=0;r<OT_SIZE;r++){
+    for(let c=0;c<OT_SIZE;c++){
+      const cell=document.createElement('div'); cell.className='othelloCell';
+      const val=row.board[r][c];
+      if(val){ const s=document.createElement('div'); s.className='othelloStone '+val; cell.appendChild(s); }
+      else if(validSet.has(r+','+c)){
+        cell.classList.add('hint');
+        const rc=r, cc=c;
+        cell.addEventListener('click',function(){ otPlaceStone(rc,cc,row); });
+      }
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+async function otPlaceStone(r,c,row){
+  const flips=otGetFlips(row.board,r,c,otMyColor); if(flips.length===0) return;
+  const newBoard=row.board.map(function(r){ return r.slice(); });
+  newBoard[r][c]=otMyColor; flips.forEach(function(f){ newBoard[f[0]][f[1]]=otMyColor; });
+  const nextTurn=otMyColor==='black'?'white':'black';
+  const nextMoves=otGetValidMoves(newBoard,nextTurn);
+  const myNextMoves=nextMoves.length===0?otGetValidMoves(newBoard,otMyColor):null;
+  let newStatus='active', winner=null, newPassCount=0;
+  if(nextMoves.length===0&&myNextMoves&&myNextMoves.length===0){
+    newStatus='finished';
+    let black=0, white=0;
+    for(let i=0;i<OT_SIZE;i++) for(let j=0;j<OT_SIZE;j++){ if(newBoard[i][j]==='black') black++; else if(newBoard[i][j]==='white') white++; }
+    if(black>white) winner=row.black_player; else if(white>black) winner=row.white_player; else winner='draw';
+  }
+  const update={board:newBoard,current_turn:nextTurn,pass_count:newPassCount,status:newStatus};
+  if(winner) update.winner=winner;
+  if(nextMoves.length===0&&newStatus==='active') update.current_turn=otMyColor;
+  await supa.from('othello_games').update(update).eq('room_code',otRoomCode);
+}
+
+function otShowResult(row){
+  const rBox=document.getElementById('othelloResultBox'); rBox.classList.remove('hidden'); rBox.style.display='block';
+  let txt;
+  if(row.winner==='draw') txt='무승부예요';
+  else if(row.winner===currentUser.username) txt='🏆 승리했어요!';
+  else txt='😢 패배했어요';
+  rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':row.winner==='draw'?'drawBox':'loseBox');
+  document.getElementById('othelloResultText').textContent=txt;
+}
+
+function otLeave(){ if(otChannel){ supa.removeChannel(otChannel); otChannel=null; } if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; } otRoomCode=''; otMyColor=''; enterOthello(); }
+function otSubscribeChat(){ otChatChannel=addChannel(supa.channel('ot-chat-'+otRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+otRoomCode},function(p){ otAppendChat(p.new); }).subscribe()); }
+async function otLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',otRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('othelloChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ otRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
+function otAppendChat(m){ otRenderChatMsg(m); const el=document.getElementById('othelloChatList'); el.scrollTop=el.scrollHeight; }
+function otRenderChatMsg(m){ const el=document.getElementById('othelloChatList'); const isMe=m.sender===currentUser.username; const w=document.createElement('div'); w.className='chatMsg '+(isMe?'me':'other'); if(!isMe){ const s=document.createElement('div'); s.className='chatMsgSender'; s.textContent=m.sender; w.appendChild(s); } const t=document.createElement('div'); t.textContent=m.text; w.appendChild(t); el.appendChild(w); }
+async function otSendChat(){ const inp=document.getElementById('othelloChatInput'); const txt=inp.value.trim(); if(!txt) return; inp.value=''; await supa.from('messages').insert({room_code:otRoomCode,sender:currentUser.username,text:txt}); }
+
+/* ========== 자동 로그인 ========== */
 async function tryAutoLogin(){
-  const stored = localStorage.getItem('nb_user');
-  if(!stored) { show('loginScreen'); return; }
-  try {
-    const parsed = JSON.parse(stored);
-    const { data } = await supa.from('users').select('*').eq('username', parsed.username).maybeSingle();
-    if(!data || data.password !== parsed.password){ localStorage.removeItem('nb_user'); show('loginScreen'); return; }
-    currentUser = { username: data.username, password: data.password, wins: data.wins, losses: data.losses };
-  } catch(e) { show('loginScreen'); return; }
-
-  const activeCode = localStorage.getItem('nb_active_room');
-  if(!activeCode){ enterRoleScreen(); return; }
-  await resumeActiveRoom();
+  const stored=localStorage.getItem('nb_user'); if(!stored){ showSection('loginScreen'); return; }
+  try{
+    const parsed=JSON.parse(stored);
+    const {data}=await supa.from('users').select('*').eq('username',parsed.username).maybeSingle();
+    if(!data||data.password!==parsed.password){ localStorage.removeItem('nb_user'); showSection('loginScreen'); return; }
+    currentUser={username:data.username,password:data.password,wins:data.wins,losses:data.losses};
+  }catch(e){ showSection('loginScreen'); return; }
+  enterHome();
 }
 
-/* ---------- 이벤트 바인딩 ---------- */
+/* ========== 이벤트 바인딩 ========== */
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('loginPassword').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-document.getElementById('loginPassword').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+document.getElementById('loginPassword').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
 document.getElementById('logoutBtn').addEventListener('click', logout);
 document.getElementById('deleteAccountBtn').addEventListener('click', deleteAccount);
-document.getElementById('resumeRoomBtn').addEventListener('click', resumeActiveRoom);
+document.getElementById('homeLeaderboardBtn').addEventListener('click', goLeaderboard);
+document.getElementById('leaderboardBackBtn').addEventListener('click', enterHome);
+document.getElementById('tabWinsBtn').addEventListener('click', function(){ lbTab='wins'; updateLbTabs(); loadLeaderboard(); });
+document.getElementById('tabRateBtn').addEventListener('click', function(){ lbTab='rate'; updateLbTabs(); loadLeaderboard(); });
 
-document.getElementById('goCreateBtn').addEventListener('click', goCreateScreen);
-document.getElementById('createCountBackBtn').addEventListener('click', enterRoleScreen);
-document.querySelectorAll('.countBtn').forEach(function(btn){
-  btn.addEventListener('click', function(){ createGame(parseInt(btn.getAttribute('data-count'), 10)); });
-});
+// 홈 게임 선택
+document.getElementById('goBaseballBtn').addEventListener('click', function(){ clearAllChannels(); bEnteredGame=false; enterBaseball(); });
+document.getElementById('goOmokBtn').addEventListener('click', function(){ clearAllChannels(); enterOmok(); });
+document.getElementById('goOthelloBtn').addEventListener('click', function(){ clearAllChannels(); enterOthello(); });
 
-document.getElementById('goJoinBtn').addEventListener('click', goJoinScreen);
-document.getElementById('guestJoinBackBtn').addEventListener('click', enterRoleScreen);
-document.getElementById('joinConfirmBtn').addEventListener('click', joinRoom);
-document.getElementById('joinSpectateBtn').addEventListener('click', joinAsSpectator);
-document.getElementById('gsNextBtn').addEventListener('click', function(){
-  supa.from('segments').select('*').eq('room_code', roomCode).eq('segment_index', currentSegmentIndex).single().then(function(res){
-    if(res.data) clickNextReady(res.data);
-  });
-});
-document.getElementById('joinCodeInput').addEventListener('keydown', function(e){ if(e.key==='Enter') joinRoom(); });
-document.getElementById('joinCodeInput').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+// 숫자야구
+document.getElementById('bBackHomeBtn').addEventListener('click', function(){ clearAllChannels(); bEnteredGame=false; enterHome(); });
+document.getElementById('bResumeBtn').addEventListener('click', function(){ bEnteredGame=false; enterBaseball(); bResumeGame(); });
+document.getElementById('bCreateBtn').addEventListener('click', function(){ bShowSub('bCreateCountScreen'); });
+document.getElementById('bCreateCountBackBtn').addEventListener('click', function(){ bShowSub('bRoleScreen'); });
+document.querySelectorAll('.countBtn').forEach(function(btn){ btn.addEventListener('click', function(){ bCreateGame(parseInt(btn.getAttribute('data-count'),10)); }); });
+document.getElementById('bJoinBtn').addEventListener('click', function(){ bShowSub('bJoinScreen'); });
+document.getElementById('bJoinBackBtn').addEventListener('click', function(){ bShowSub('bRoleScreen'); });
+document.getElementById('bJoinConfirmBtn').addEventListener('click', function(){ bJoinRoom(false); });
+document.getElementById('bSpectateBtn').addEventListener('click', function(){ bJoinRoom(true); });
+document.getElementById('bJoinCodeInput').addEventListener('keydown', function(e){ if(e.key==='Enter') bJoinRoom(false); });
+document.getElementById('bJoinCodeInput').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+document.getElementById('bLobbyLeaveBtn').addEventListener('click', bLeaveToRole);
+document.getElementById('bGameLeaveBtn').addEventListener('click', bLeaveToRole);
+document.getElementById('bSegSecretBtn').addEventListener('click', bSegConfirmSecret);
+document.getElementById('bSegSecretInput').addEventListener('keydown', function(e){ if(e.key==='Enter') bSegConfirmSecret(); });
+document.getElementById('bSegSecretInput').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+document.getElementById('bgsSubmitBtn').addEventListener('click', bSubmitGuess);
+document.getElementById('bgsGuessInput').addEventListener('keydown', function(e){ if(e.key==='Enter') bSubmitGuess(); });
+document.getElementById('bgsGuessInput').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); bUpdateTyping(e.target.value); });
+document.getElementById('bgsNextBtn').addEventListener('click', bClickNext);
+document.getElementById('bgsBackBtn').addEventListener('click', function(){ clearAllChannels(); bEnteredGame=false; enterBaseball(); });
+document.getElementById('bGameChatSendBtn').addEventListener('click', bSendChat);
+document.getElementById('bGameChatInput').addEventListener('keydown', function(e){ if(e.key==='Enter') bSendChat(); });
 
-document.getElementById('goLeaderboardBtn').addEventListener('click', goLeaderboard);
-document.getElementById('leaderboardBackBtn').addEventListener('click', enterRoleScreen);
-document.getElementById('tabWinsBtn').addEventListener('click', function(){ leaderboardTab='wins'; updateTabButtons(); loadLeaderboard(); });
-document.getElementById('tabRateBtn').addEventListener('click', function(){ leaderboardTab='rate'; updateTabButtons(); loadLeaderboard(); });
+// 오목
+document.getElementById('omokBackHomeBtn').addEventListener('click', function(){ clearAllChannels(); enterHome(); });
+document.getElementById('omokCreateBtn').addEventListener('click', omokCreate);
+document.getElementById('omokJoinLobbyBtn').addEventListener('click', function(){ omokShowSub('omokJoinScreen'); });
+document.getElementById('omokJoinBackBtn').addEventListener('click', function(){ omokShowSub('omokLobby'); });
+document.getElementById('omokJoinConfirmBtn').addEventListener('click', omokJoin);
+document.getElementById('omokJoinCode').addEventListener('keydown', function(e){ if(e.key==='Enter') omokJoin(); });
+document.getElementById('omokJoinCode').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+document.getElementById('omokWaitLeaveBtn').addEventListener('click', function(){ clearAllChannels(); omokRoomCode=''; enterOmok(); });
+document.getElementById('omokGameLeaveBtn').addEventListener('click', omokLeave);
+document.getElementById('omokPlayAgainBtn').addEventListener('click', function(){ clearAllChannels(); omokRoomCode=''; enterOmok(); });
+document.getElementById('omokChatSendBtn').addEventListener('click', omokSendChat);
+document.getElementById('omokChatInput').addEventListener('keydown', function(e){ if(e.key==='Enter') omokSendChat(); });
 
-document.getElementById('lobbyLeaveBtn').addEventListener('click', leaveGame);
-document.getElementById('gameLeaveBtn').addEventListener('click', leaveGame);
-document.getElementById('gameBackToRoleBtn').addEventListener('click', leaveGame);
-
-document.getElementById('segSecretBtn').addEventListener('click', segConfirmSecret);
-document.getElementById('segSecretInput').addEventListener('keydown', function(e){ if(e.key==='Enter') segConfirmSecret(); });
-document.getElementById('segSecretInput').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
-
-document.getElementById('gsSubmitBtn').addEventListener('click', gsSubmitGuess);
-document.getElementById('gsGuessInput').addEventListener('keydown', function(e){ if(e.key==='Enter') gsSubmitGuess(); });
-document.getElementById('gsGuessInput').addEventListener('input', function(e){
-  e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,4);
-  updateTyping(e.target.value);
-});
-
-document.getElementById('gameChatSendBtn').addEventListener('click', sendChat);
-document.getElementById('gameChatInput').addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat(); });
+// 오델로
+document.getElementById('othelloBackHomeBtn').addEventListener('click', function(){ clearAllChannels(); enterHome(); });
+document.getElementById('othelloCreateBtn').addEventListener('click', otCreate);
+document.getElementById('othelloJoinLobbyBtn').addEventListener('click', function(){ otShowSub('othelloJoinScreen'); });
+document.getElementById('othelloJoinBackBtn').addEventListener('click', function(){ otShowSub('othelloLobby'); });
+document.getElementById('othelloJoinConfirmBtn').addEventListener('click', otJoin);
+document.getElementById('othelloJoinCode').addEventListener('keydown', function(e){ if(e.key==='Enter') otJoin(); });
+document.getElementById('othelloJoinCode').addEventListener('input', function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+document.getElementById('othelloWaitLeaveBtn').addEventListener('click', function(){ clearAllChannels(); otRoomCode=''; enterOthello(); });
+document.getElementById('othelloGameLeaveBtn').addEventListener('click', otLeave);
+document.getElementById('othelloPlayAgainBtn').addEventListener('click', function(){ clearAllChannels(); otRoomCode=''; enterOthello(); });
+document.getElementById('othelloChatSendBtn').addEventListener('click', otSendChat);
+document.getElementById('othelloChatInput').addEventListener('keydown', function(e){ if(e.key==='Enter') otSendChat(); });
 
 tryAutoLogin();
 </script>
