@@ -148,7 +148,12 @@ button:disabled { opacity:0.4; cursor:default; }
     <button id="tabWinsBtn" class="tabBtn active">승수</button>
     <button id="tabRateBtn" class="tabBtn">승률</button>
   </div>
-  <p id="lbRateNote" class="hidden" style="font-size:11px; color:#999; margin:0 0 8px;">* 승률 탭은 각 게임 5판 이상 플레이한 사람만 표시돼요</p>
+  <div class="tabRow" style="gap:6px;">
+    <button id="tabGameBaseball" class="tabBtn active" style="font-size:13px; padding:6px;">⚾ 숫자야구</button>
+    <button id="tabGameOmok" class="tabBtn" style="font-size:13px; padding:6px;">⚫ 오목</button>
+    <button id="tabGameOthello" class="tabBtn" style="font-size:13px; padding:6px;">🟢 오델로</button>
+  </div>
+  <p id="lbRateNote" class="hidden" style="font-size:11px; color:#999; margin:0 0 8px;">* 승률 탭은 5판 이상 플레이한 사람만 표시돼요</p>
   <div id="leaderboardList"></div>
   <div id="leaderboardEmpty" class="historyEmpty hidden">아직 기록이 없어요</div>
 </div>
@@ -301,9 +306,10 @@ button:disabled { opacity:0.4; cursor:default; }
   <div id="othelloGameScreen" class="hidden">
     <div class="header-row" style="margin-bottom:8px;"><p style="margin:0; font-size:13px; color:#6b6b66;">방: <b id="othelloGameCode">----</b></p><button id="othelloGameLeaveBtn">나가기</button></div>
     <div id="othelloTurnBanner" class="turnBanner">연결 중...</div>
+    <p id="othelloMyColorNote" style="font-size:12px; color:#6b6b66; text-align:center; margin:0 0 8px;"></p>
     <div class="scoreRow">
-      <div class="scoreBox"><div class="othelloStone black" style="width:20px;height:20px;display:inline-block;border-radius:50%;"></div><b id="blackScore">2</b>개</div>
-      <div class="scoreBox"><div class="othelloStone white" style="width:20px;height:20px;display:inline-block;border-radius:50%;"></div><b id="whiteScore">2</b>개</div>
+      <div class="scoreBox"><div class="othelloStone black" style="width:20px;height:20px;display:inline-block;border-radius:50%;vertical-align:middle;"></div> <b id="blackScore">2</b>개 <span id="blackPlayerName" style="font-size:12px;color:#999;"></span></div>
+      <div class="scoreBox"><div class="othelloStone white" style="width:20px;height:20px;display:inline-block;border-radius:50%;vertical-align:middle;border:1px solid #aaa;"></div> <b id="whiteScore">2</b>개 <span id="whitePlayerName" style="font-size:12px;color:#999;"></span></div>
     </div>
     <div class="boardWrap"><div id="othelloBoard" class="othelloGrid"></div></div>
     <div id="othelloResultBox" class="resultBox winBox hidden">
@@ -367,35 +373,37 @@ async function refreshUser(){
 }
 
 /* ===== 랭킹 ===== */
-let lbTab='wins';
-function goLeaderboard(){ lbTab='wins'; updateLbTabs(); loadLeaderboard(); showSection('leaderboardScreen'); }
-function updateLbTabs(){ document.getElementById('tabWinsBtn').classList.toggle('active',lbTab==='wins'); document.getElementById('tabRateBtn').classList.toggle('active',lbTab==='rate'); document.getElementById('lbRateNote').classList.toggle('hidden',lbTab!=='rate'); }
+let lbTab='wins', lbGame='baseball';
+function goLeaderboard(){ lbTab='wins'; lbGame='baseball'; updateLbTabs(); loadLeaderboard(); showSection('leaderboardScreen'); }
+function updateLbTabs(){
+  document.getElementById('tabWinsBtn').classList.toggle('active',lbTab==='wins');
+  document.getElementById('tabRateBtn').classList.toggle('active',lbTab==='rate');
+  document.getElementById('tabGameBaseball').classList.toggle('active',lbGame==='baseball');
+  document.getElementById('tabGameOmok').classList.toggle('active',lbGame==='omok');
+  document.getElementById('tabGameOthello').classList.toggle('active',lbGame==='othello');
+  document.getElementById('lbRateNote').classList.toggle('hidden',lbTab!=='rate');
+}
+const LB_GAME_KEYS={ baseball:{wk:'baseball_wins',lk:'baseball_losses'}, omok:{wk:'omok_wins',lk:'omok_losses'}, othello:{wk:'othello_wins',lk:'othello_losses'} };
 async function loadLeaderboard(){
   const {data}=await supa.from('users').select('username,baseball_wins,baseball_losses,omok_wins,omok_losses,othello_wins,othello_losses');
   const listEl=document.getElementById('leaderboardList'); const emptyEl=document.getElementById('leaderboardEmpty');
-  if(!data||data.length===0){ listEl.innerHTML=''; emptyEl.classList.remove('hidden'); return; }
-  emptyEl.classList.add('hidden'); listEl.innerHTML='';
-  const games=[{key:'baseball',label:'⚾ 숫자야구',wk:'baseball_wins',lk:'baseball_losses'},{key:'omok',label:'⚫ 오목',wk:'omok_wins',lk:'omok_losses'},{key:'othello',label:'🟢 오델로',wk:'othello_wins',lk:'othello_losses'}];
-  games.forEach(function(g){
-    let rows=data.map(function(u){ const w=u[g.wk]||0; const l=u[g.lk]||0; const t=w+l; const rate=t>0?w/t:-1; return {username:u.username,wins:w,losses:l,total:t,rate:rate}; });
-    if(lbTab==='wins'){
-      rows=rows.filter(function(r){ return r.total>0; });
-      rows.sort(function(a,b){ return b.wins-a.wins; });
-    } else {
-      rows=rows.filter(function(r){ return r.total>=5; });
-      rows.sort(function(a,b){ return b.rate-a.rate; });
-    }
-    if(rows.length===0) return;
-    const section=document.createElement('div'); section.className='gameRankSection';
-    const title=document.createElement('p'); title.className='gameRankTitle'; title.textContent=g.label; section.appendChild(title);
-    rows.forEach(function(r,idx){
-      const rank=idx+1; const rc=rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      const rp=r.total>0?Math.round(r.rate*1000)/10:0;
-      const d=document.createElement('div'); d.className='rankRow';
-      d.innerHTML='<div class="rankLeft"><span class="rankNum '+rc+'">'+rank+'</span><span>'+r.username+'</span></div><span>'+r.wins+'승 '+r.losses+'패 · '+rp+'%</span>';
-      section.appendChild(d);
-    });
-    listEl.appendChild(section);
+  listEl.innerHTML=''; emptyEl.classList.add('hidden');
+  if(!data||data.length===0){ emptyEl.classList.remove('hidden'); return; }
+  const {wk,lk}=LB_GAME_KEYS[lbGame];
+  let rows=data.map(function(u){ const w=u[wk]||0; const l=u[lk]||0; const t=w+l; return {username:u.username,wins:w,losses:l,total:t,rate:t>0?w/t:-1}; });
+  if(lbTab==='wins'){
+    rows.sort(function(a,b){ return b.wins-a.wins||b.total-a.total; });
+  } else {
+    rows=rows.filter(function(r){ return r.total>=5; });
+    rows.sort(function(a,b){ return b.rate-a.rate; });
+  }
+  if(rows.length===0){ emptyEl.classList.remove('hidden'); return; }
+  rows.forEach(function(r,idx){
+    const rank=idx+1; const rc=rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
+    const rp=r.total>0?Math.round(r.rate*1000)/10:0;
+    const d=document.createElement('div'); d.className='rankRow';
+    d.innerHTML='<div class="rankLeft"><span class="rankNum '+rc+'">'+rank+'</span><span>'+r.username+'</span></div><span style="font-size:13px;">'+r.wins+'승 '+r.losses+'패 · '+rp+'%</span>';
+    listEl.appendChild(d);
   });
 }
 
@@ -523,12 +531,12 @@ function otShowSub(id){ ['othelloLobby','othelloJoinScreen','othelloWaitScreen',
 function enterOthello(){ showSection('othelloSection'); otShowSub('othelloLobby'); }
 function otInitBoard(){ const b=[]; for(let i=0;i<OT_SIZE;i++){ b.push([]); for(let j=0;j<OT_SIZE;j++) b[i].push(null); } b[3][3]='white'; b[3][4]='black'; b[4][3]='black'; b[4][4]='white'; return b; }
 async function otCreate(){ for(let i=0;i<5;i++){ const code=genCode(); const board=otInitBoard(); const myColor=Math.random()<0.5?'black':'white'; const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black'}; if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username; const {error}=await supa.from('othello_games').insert(insertData); if(!error){ otRoomCode=code; otMyColor=myColor; document.getElementById('othelloWaitCode').textContent=code; otShowSub('othelloWaitScreen'); otSubscribeGame(); return; } } alert('방 생성 실패'); }
-async function otJoin(){ const code=document.getElementById('othelloJoinCode').value.trim(); const err=document.getElementById('othelloJoinErr'); if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; } const {data,error}=await supa.from('othello_games').select('*').eq('room_code',code).maybeSingle(); if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; } if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; } err.textContent=''; const myColor=data.black_player?'white':'black'; otRoomCode=code; otMyColor=myColor; const updateData={status:'active',players:data.players.concat([currentUser.username])}; if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username; await supa.from('othello_games').update(updateData).eq('room_code',code); otSubscribeGame(); otEnterGame(data); }
+async function otJoin(){ const code=document.getElementById('othelloJoinCode').value.trim(); const err=document.getElementById('othelloJoinErr'); if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; } const {data,error}=await supa.from('othello_games').select('*').eq('room_code',code).maybeSingle(); if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; } if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; } err.textContent=''; const myColor=data.black_player?'white':'black'; otRoomCode=code; otMyColor=myColor; const updateData={status:'active',players:data.players.concat([currentUser.username])}; if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username; await supa.from('othello_games').update(updateData).eq('room_code',code); otSubscribeGame(); const {data:fresh}=await supa.from('othello_games').select('*').eq('room_code',code).single(); otEnterGame(fresh||data); }
 function otSubscribeGame(){ if(otChannel) supa.removeChannel(otChannel); otChannel=addChannel(supa.channel('othello-'+otRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'othello_games',filter:'room_code=eq.'+otRoomCode},function(p){ otHandleUpdate(p.new); }).subscribe()); }
 function otHandleUpdate(row){ if(row.status==='waiting') return; if(!document.getElementById('othelloWaitScreen').classList.contains('hidden')){ otEnterGame(row); return; } if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){ const players=[row.black_player,row.white_player].filter(Boolean); if(players.every(function(p){ return row.rematch_ready.includes(p); })){ const isAllNull=row.board.every(function(r){ return r.every(function(c){ return c===null; }); }); if(isAllNull){ if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); } } } otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); if(row.status==='finished') otShowResult(row); }
 function otEnterGame(row){ document.getElementById('othelloGameCode').textContent=otRoomCode; otShowSub('othelloGameScreen'); saveGameSession('othello',otRoomCode,otMyColor); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); otLoadChat(); otSubscribeChat(); if(row.status==='finished') otShowResult(row); }
-function otUpdateBanner(row){ if(row.status==='finished'){ document.getElementById('othelloTurnBanner').textContent='게임 종료'; return; } const isMyTurn=row.current_turn===otMyColor; const curName=row.current_turn==='black'?(row.black_player||'흑'):(row.white_player||'백'); document.getElementById('othelloTurnBanner').textContent=isMyTurn?'내 차례예요!':(curName+'님의 차례'); }
-function otUpdateScore(row){ let black=0,white=0; for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++){ if(row.board[r][c]==='black') black++; else if(row.board[r][c]==='white') white++; } document.getElementById('blackScore').textContent=black; document.getElementById('whiteScore').textContent=white; }
+function otUpdateBanner(row){ if(row.status==='finished'){ document.getElementById('othelloTurnBanner').textContent='게임 종료'; return; } const isMyTurn=row.current_turn===otMyColor; const curName=row.current_turn==='black'?(row.black_player||'흑'):(row.white_player||'백'); document.getElementById('othelloTurnBanner').textContent=isMyTurn?'내 차례예요!':(curName+'님의 차례'); const colorLabel=otMyColor==='black'?'흑돌 ⚫':'백돌 ⚪'; document.getElementById('othelloMyColorNote').textContent='내 돌: '+colorLabel; }
+function otUpdateScore(row){ let black=0,white=0; for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++){ if(row.board[r][c]==='black') black++; else if(row.board[r][c]==='white') white++; } document.getElementById('blackScore').textContent=black; document.getElementById('whiteScore').textContent=white; const bName=row.black_player||(otMyColor==='black'?currentUser.username:'?'); const wName=row.white_player||(otMyColor==='white'?currentUser.username:'?'); document.getElementById('blackPlayerName').textContent='('+bName+(bName===currentUser.username?' · 나':'')+')'+(bName===currentUser.username?' ★':''); document.getElementById('whitePlayerName').textContent='('+wName+(wName===currentUser.username?' · 나':'')+')'+(wName===currentUser.username?' ★':''); }
 function otGetFlips(board,r,c,color){ const opp=color==='black'?'white':'black'; const flips=[]; for(const [dr,dc] of OT_DIRS){ const line=[]; let nr=r+dr,nc=c+dc; while(nr>=0&&nr<OT_SIZE&&nc>=0&&nc<OT_SIZE&&board[nr][nc]===opp){ line.push([nr,nc]); nr+=dr; nc+=dc; } if(line.length>0&&nr>=0&&nr<OT_SIZE&&nc>=0&&nc<OT_SIZE&&board[nr][nc]===color) flips.push(...line); } return flips; }
 function otGetValidMoves(board,color){ const moves=[]; for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++) if(!board[r][c]&&otGetFlips(board,r,c,color).length>0) moves.push([r,c]); return moves; }
 function otRenderBoard(row){
@@ -637,6 +645,9 @@ document.getElementById('homeLeaderboardBtn').addEventListener('click',goLeaderb
 document.getElementById('leaderboardBackBtn').addEventListener('click',enterHome);
 document.getElementById('tabWinsBtn').addEventListener('click',function(){ lbTab='wins'; updateLbTabs(); loadLeaderboard(); });
 document.getElementById('tabRateBtn').addEventListener('click',function(){ lbTab='rate'; updateLbTabs(); loadLeaderboard(); });
+document.getElementById('tabGameBaseball').addEventListener('click',function(){ lbGame='baseball'; updateLbTabs(); loadLeaderboard(); });
+document.getElementById('tabGameOmok').addEventListener('click',function(){ lbGame='omok'; updateLbTabs(); loadLeaderboard(); });
+document.getElementById('tabGameOthello').addEventListener('click',function(){ lbGame='othello'; updateLbTabs(); loadLeaderboard(); });
 document.getElementById('goBaseballBtn').addEventListener('click',function(){ clearAllChannels(); bEnteredGame=false; enterBaseball(); });
 document.getElementById('goOmokBtn').addEventListener('click',function(){ clearAllChannels(); enterOmok(); });
 document.getElementById('goOthelloBtn').addEventListener('click',function(){ clearAllChannels(); enterOthello(); });
