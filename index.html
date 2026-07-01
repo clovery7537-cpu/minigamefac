@@ -96,14 +96,15 @@ button:disabled { opacity:0.4; cursor:default; }
 .omokForbidMark { position:absolute; width:14px; height:14px; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#c0392b; }
 .confirmRow { display:flex; gap:8px; margin-bottom:8px; }
 /* 오델로 보드 */
-.othelloGrid { display:inline-grid; background:#1b5e20; padding:6px; border-radius:6px; gap:3px; }
-.othelloCell { width:44px; height:44px; background:#2e7d32; border-radius:3px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background 0.1s; }
-.othelloCell:hover { background:#388e3c; }
-.othelloCell.hint { background:#43a047; }
-.othelloCell.hint::after { content:'·'; position:absolute; color:rgba(0,0,0,0.3); font-size:20px; font-weight:700; }
-.othelloStone { width:36px; height:36px; border-radius:50%; box-shadow:1px 2px 4px rgba(0,0,0,0.5); transition:transform 0.15s; }
-.othelloStone.black { background:radial-gradient(circle at 35% 35%, #555, #111); }
-.othelloStone.white { background:radial-gradient(circle at 35% 35%, #fff, #ddd); border:1px solid #bbb; }
+.othelloGrid { display:inline-grid; background:#fff; padding:4px; border-radius:4px; gap:2px; border:2px solid #1a1a1a; }
+.othelloCell { width:44px; height:44px; background:#fff; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background 0.1s; }
+.othelloCell:hover { background:#f0f0ed; }
+.othelloCell.hint { background:#e6f0ff; }
+.othelloCell.hint::after { content:'·'; position:absolute; color:rgba(0,0,0,0.25); font-size:20px; font-weight:700; }
+.othelloStone { width:36px; height:36px; border-radius:50%; box-shadow:1px 2px 4px rgba(0,0,0,0.3); transition:transform 0.15s; }
+.othelloStone.black { background:radial-gradient(circle at 35% 35%, #555, #111); border:2px solid #000; }
+.othelloStone.white { background:radial-gradient(circle at 35% 35%, #fff, #e8e8e8); border:2px solid #1a1a1a; }
+.othelloLastDot { position:absolute; width:8px; height:8px; border-radius:50%; background:#e74c3c; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3; pointer-events:none; }
 .scoreRow { display:flex; gap:12px; justify-content:center; margin-bottom:8px; font-size:14px; }
 .scoreBox { display:flex; align-items:center; gap:6px; background:#f5f5f3; padding:6px 12px; border-radius:8px; }
 </style>
@@ -547,12 +548,14 @@ function otRenderBoard(row){
   const isMyTurn=row.current_turn===otMyColor&&row.status==='active';
   const validMoves=isMyTurn?otGetValidMoves(row.board,otMyColor):[];
   const validSet=new Set(validMoves.map(function(m){ return m[0]+','+m[1]; }));
+  const lastMove=row.last_move;
   for(let r=0;r<OT_SIZE;r++){
     for(let c=0;c<OT_SIZE;c++){
       const cell=document.createElement('div'); cell.className='othelloCell';
       const val=row.board[r][c];
       if(val){
         const s=document.createElement('div'); s.className='othelloStone '+val; cell.appendChild(s);
+        if(lastMove&&lastMove[0]===r&&lastMove[1]===c){ const dot=document.createElement('div'); dot.className='othelloLastDot'; cell.appendChild(dot); }
       } else if(otPreviewPos&&otPreviewPos[0]===r&&otPreviewPos[1]===c){
         const s=document.createElement('div'); s.className='othelloStone '+otMyColor; s.style.opacity='0.4'; cell.appendChild(s);
         if(isMyTurn){ const rc=r,cc=c; cell.addEventListener('click',function(){ otPreviewPos=null; document.getElementById('othelloPreviewInfo').classList.add('hidden'); otRenderBoard(row); }); }
@@ -571,7 +574,7 @@ async function otConfirmPlace(){
   document.getElementById('othelloPreviewInfo').classList.add('hidden');
   await otPlaceStone(r,c,otCurrentRow);
 }
-async function otPlaceStone(r,c,row){ const flips=otGetFlips(row.board,r,c,otMyColor); if(flips.length===0) return; const newBoard=row.board.map(function(r){ return r.slice(); }); newBoard[r][c]=otMyColor; flips.forEach(function(f){ newBoard[f[0]][f[1]]=otMyColor; }); const nextTurn=otMyColor==='black'?'white':'black'; const nextMoves=otGetValidMoves(newBoard,nextTurn); const myNextMoves=nextMoves.length===0?otGetValidMoves(newBoard,otMyColor):null; let newStatus='active',winner=null; if(nextMoves.length===0&&myNextMoves&&myNextMoves.length===0){ newStatus='finished'; let black=0,white=0; for(let i=0;i<OT_SIZE;i++) for(let j=0;j<OT_SIZE;j++){ if(newBoard[i][j]==='black') black++; else if(newBoard[i][j]==='white') white++; } if(black>white) winner=row.black_player; else if(white>black) winner=row.white_player; else winner='draw'; } const update={board:newBoard,current_turn:nextTurn,status:newStatus}; if(winner) update.winner=winner; if(nextMoves.length===0&&newStatus==='active') update.current_turn=otMyColor; await supa.from('othello_games').update(update).eq('room_code',otRoomCode); }
+async function otPlaceStone(r,c,row){ const flips=otGetFlips(row.board,r,c,otMyColor); if(flips.length===0) return; const newBoard=row.board.map(function(r){ return r.slice(); }); newBoard[r][c]=otMyColor; flips.forEach(function(f){ newBoard[f[0]][f[1]]=otMyColor; }); const nextTurn=otMyColor==='black'?'white':'black'; const nextMoves=otGetValidMoves(newBoard,nextTurn); const myNextMoves=nextMoves.length===0?otGetValidMoves(newBoard,otMyColor):null; let newStatus='active',winner=null; if(nextMoves.length===0&&myNextMoves&&myNextMoves.length===0){ newStatus='finished'; let black=0,white=0; for(let i=0;i<OT_SIZE;i++) for(let j=0;j<OT_SIZE;j++){ if(newBoard[i][j]==='black') black++; else if(newBoard[i][j]==='white') white++; } if(black>white) winner=row.black_player; else if(white>black) winner=row.white_player; else winner='draw'; } const update={board:newBoard,current_turn:nextTurn,status:newStatus,last_move:[r,c]}; if(winner) update.winner=winner; if(nextMoves.length===0&&newStatus==='active') update.current_turn=otMyColor; await supa.from('othello_games').update(update).eq('room_code',otRoomCode); }
 function otShowResult(row){ const rBox=document.getElementById('othelloResultBox'); rBox.classList.remove('hidden'); rBox.style.display='block'; let txt; if(row.winner==='draw') txt='무승부예요'; else if(row.winner===currentUser.username) txt='🏆 승리했어요!'; else txt='😢 패배했어요'; rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':row.winner==='draw'?'drawBox':'loseBox'); document.getElementById('othelloResultText').textContent=txt; }
 async function otLeave(){ if(otRoomCode){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(data&&data.status==='active'){ const opponent=otMyColor==='black'?data.white_player:data.black_player; if(opponent) await supa.from('othello_games').update({status:'finished',winner:opponent}).eq('room_code',otRoomCode); } } if(otChannel){ supa.removeChannel(otChannel); otChannel=null; } if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; } clearGameSession(); otRoomCode=''; otMyColor=''; otPreviewPos=null; otCurrentRow=null; enterOthello(); }
 async function otRematch(){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(!data) return; const ready=(data.rematch_ready||[]).slice(); if(!ready.includes(currentUser.username)) ready.push(currentUser.username); await supa.from('othello_games').update({rematch_ready:ready}).eq('room_code',otRoomCode); document.getElementById('othelloRematchBtn').classList.add('hidden'); document.getElementById('othelloRematchNote').classList.remove('hidden'); const players=[data.black_player,data.white_player].filter(Boolean); if(players.every(function(p){ return ready.includes(p); })) await otStartRematch(data); }
