@@ -262,11 +262,10 @@ button:disabled { opacity:0.4; cursor:default; }
     <div class="header-row" style="margin-bottom:8px;"><p style="margin:0; font-size:13px; color:#6b6b66;">방: <b id="omokGameCode">----</b></p><button id="omokGameLeaveBtn">나가기</button></div>
     <div id="omokTurnBanner" class="turnBanner">연결 중...</div>
     <p style="font-size:11px; color:#999; margin:0 0 6px; text-align:center;">렌주 룰 · 흑돌만 3-3·4-4·6목 이상 금지 / 백돌 제한 없음 / 흑돌 5목만 승리</p>
-    <div id="omokPreviewInfo" class="hidden" style="background:#e6f0ff; border-radius:8px; padding:8px 12px; margin-bottom:8px; font-size:13px; display:flex; align-items:center; justify-content:space-between;">
-      <span id="omokPreviewText">클릭하여 위치 선택</span>
-      <button id="omokConfirmBtn" class="primary" style="padding:6px 14px; font-size:13px;">놓기</button>
-    </div>
     <div class="boardWrap"><div id="omokBoard" class="omokGrid"></div></div>
+    <div id="omokPreviewInfo" class="hidden" style="margin-top:8px;">
+      <button id="omokConfirmBtn" class="primary" style="width:50%; font-size:16px; padding:12px;">놓기 ✓</button>
+    </div>
     <div id="omokResultBox" class="resultBox winBox hidden">
       <p class="title" id="omokResultText"></p>
       <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
@@ -485,7 +484,6 @@ function omokSelectPos(r,c,row){
   if(omokMyColor==='black'&&omokIsForbidden(row.board,r,c)){ alert('금수 위치예요! (3-3, 4-4, 장목 금지)'); return; }
   omokPreviewPos=[r,c];
   document.getElementById('omokPreviewInfo').classList.remove('hidden');
-  document.getElementById('omokPreviewText').textContent=(r+1)+'행 '+(c+1)+'열에 '+(omokMyColor==='black'?'흑':'백')+'돌 놓기';
   omokRenderBoard(row);
 }
 
