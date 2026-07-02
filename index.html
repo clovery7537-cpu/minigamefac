@@ -994,35 +994,41 @@ function grtRenderGame(row){
     document.getElementById('grtTurnBanner').textContent=(isFirstPhase?opponentTeam+'팀이 선공':'내 차례가 될 예정')+'... 상대방이 배치 중';
   }
 
-  // 내 타일 선택 UI
+  // 내 타일 선택 UI - 항상 표시, 내 차례일 때만 선택 가능
   const myTileArea=document.getElementById('grtMyTileArea');
   const waitNote=document.getElementById('grtWaitNote');
+  const myTiles=grtMyTeam==='red'?(row.red_tiles||[1,2,3,4,5,6,7,8,9]):(row.blue_tiles||[1,2,3,4,5,6,7,8,9]);
+  myTileArea.classList.remove('hidden');
   if(isMyTurn&&!alreadyPlaced){
-    myTileArea.classList.remove('hidden'); waitNote.classList.add('hidden');
-    const myTiles=grtMyTeam==='red'?(row.red_tiles||[1,2,3,4,5,6,7,8,9]):(row.blue_tiles||[1,2,3,4,5,6,7,8,9]);
-    grtRenderMyTiles(myTiles);
+    waitNote.classList.add('hidden');
+    grtRenderMyTiles(myTiles, true);
   } else {
-    myTileArea.classList.add('hidden');
     waitNote.classList.toggle('hidden', alreadyPlaced);
+    grtRenderMyTiles(myTiles, false);
+    document.getElementById('grtPlaceBtn').style.display='none';
   }
 
   // 라운드 기록
   grtRenderRoundLog(row.rounds||[]);
 }
 
-function grtRenderMyTiles(tiles){
+function grtRenderMyTiles(tiles, selectable){
   const grid=document.getElementById('grtMyTileGrid'); grid.innerHTML='';
+  const placeBtn=document.getElementById('grtPlaceBtn');
+  placeBtn.style.display=selectable?'block':'none';
   tiles.sort(function(a,b){ return a-b; });
   tiles.forEach(function(n){
     const isOdd=n%2!==0;
     const t=document.createElement('div');
-    t.className='grtTile '+(isOdd?'black-tile':'white-tile')+(grtSelectedTile===n?' selected':'');
+    t.className='grtTile '+(isOdd?'black-tile':'white-tile')+(grtSelectedTile===n?' selected':'')+(selectable?'':' disabled');
     t.textContent=n;
-    t.addEventListener('click',function(){
-      grtSelectedTile=n;
-      document.getElementById('grtPlaceBtn').disabled=false;
-      grtRenderMyTiles(tiles);
-    });
+    if(selectable){
+      t.addEventListener('click',function(){
+        grtSelectedTile=n;
+        placeBtn.disabled=false;
+        grtRenderMyTiles(tiles, true);
+      });
+    }
     grid.appendChild(t);
   });
 }
@@ -1089,7 +1095,7 @@ function grtShowRoundResult(row){
   const isMyWin=lastRound.winner===grtMyTeam;
   box.className='resultBox '+(lastRound.winner?(isMyWin?'winBox':'loseBox'):'drawBox');
   document.getElementById('grtRoundResultText').textContent=(lastRound.winner?(isMyWin?'✓ 이 라운드 승리!':'이 라운드 패배'):'무승부');
-  document.getElementById('grtRoundReveal').textContent='🔴 '+lastRound.red+' vs 🔵 '+lastRound.blue+' → '+resultLabel;
+  document.getElementById('grtRoundReveal').innerHTML='🔴 '+tileColorIcon(lastRound.red)+' vs 🔵 '+tileColorIcon(lastRound.blue)+' → '+resultLabel;
   grtRenderRoundLog(rounds);
   // 다음 라운드 버튼 (후공만 누르거나, 둘 다 볼 수 있도록 누구나 가능)
   const nextBtn=document.getElementById('grtNextRoundBtn');
@@ -1101,16 +1107,16 @@ async function grtNextRound(){
   await supa.from('guryongtu_games').update({phase:'place_first',placed_first:null,placed_second:null}).eq('room_code',grtRoomCode);
 }
 
-function tileIcon(n){ return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;font-size:12px;font-weight:700;'+(n%2!==0?'background:#1a1a1a;color:#fff;':'background:#fff;color:#1a1a1a;border:1.5px solid #aaa;')+'">'+n+'</span>'; }
+function tileColorIcon(n){ const isOdd=n%2!==0; return '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;'+(isOdd?'background:#1a1a1a;':'background:#fff;border:1.5px solid #aaa;')+'"></span>'; }
 
 function grtRenderRoundLog(rounds){
   const el=document.getElementById('grtRoundLog'); el.innerHTML='';
   rounds.forEach(function(r){
     const wl=r.winner==='red'?'🔴 승':r.winner==='blue'?'🔵 승':'무';
     const d=document.createElement('div'); d.className='grtRoundRow';
-    d.innerHTML='<span style="color:#999;font-size:12px;">R'+r.round+'</span>'
-      +'<span>🔴 '+tileIcon(r.red)+'</span>'
-      +'<span>🔵 '+tileIcon(r.blue)+'</span>'
+    d.innerHTML='<span style="color:#999;font-size:12px;min-width:24px;">R'+r.round+'</span>'
+      +'<span>🔴 '+tileColorIcon(r.red)+'</span>'
+      +'<span>🔵 '+tileColorIcon(r.blue)+'</span>'
       +'<span style="font-weight:600;">'+wl+'</span>';
     el.appendChild(d);
   });
