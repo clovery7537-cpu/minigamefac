@@ -716,6 +716,9 @@ async function omokConfirmPlace(){
   await supa.from('omok_games').update(update).eq('room_code',omokRoomCode);
 }
 
+function omokCountDir(board,r,c,dr,dc,color){ let count=0; let nr=r+dr,nc=c+dc; while(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color){ count++; nr+=dr; nc+=dc; } return count; }
+function omokLineCount(board,r,c,dr,dc,color){ return 1+omokCountDir(board,r,c,dr,dc,color)+omokCountDir(board,r,c,-dr,-dc,color); }
+
 // 특정 방향으로 창(window) 추출 (OOB는 벽으로 처리)
 function omokGetWindow(board,r,c,dr,dc,start,len){
   const cells=[];
