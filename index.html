@@ -621,7 +621,38 @@ function omokShowSub(id){ ['omokLobby','omokJoinScreen','omokWaitScreen','omokGa
 function enterOmok(){ showSection('omokSection'); omokShowSub('omokLobby'); }
 
 async function omokCreate(){ for(let i=0;i<5;i++){ const code=genCode(); const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); } const myColor=Math.random()<0.5?'black':'white'; const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black',last_move:null}; if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username; const {error}=await supa.from('omok_games').insert(insertData); if(!error){ omokRoomCode=code; omokMyColor=myColor; document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); omokSubscribeGame(); return; } } alert('방 생성 실패'); }
-async function omokJoin(){ const code=document.getElementById('omokJoinCode').value.trim(); const err=document.getElementById('omokJoinErr'); if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; } const {data,error}=await supa.from('omok_games').select('*').eq('room_code',code).maybeSingle(); if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; } const alreadyIn=[data.black_player,data.white_player].filter(Boolean).includes(currentUser.username); if(alreadyIn){ omokRoomCode=code; omokMyColor=data.black_player===currentUser.username?'black':'white'; omokSubscribeGame(); if(data.status==='waiting'){ document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); } else { showSection('omokSection'); omokEnterGame(data); } return; } if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; } err.textContent=''; const myColor=data.black_player?'white':'black'; omokRoomCode=code; omokMyColor=myColor; const updateData={status:'active',players:data.players.concat([currentUser.username])}; if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username; await supa.from('omok_games').update(updateData).eq('room_code',code); omokSubscribeGame(); const {data:fresh}=await supa.from('omok_games').select('*').eq('room_code',code).maybeSingle(); showSection('omokSection'); omokEnterGame(fresh||data); }
+async function omokJoin(){
+  try {
+    const code=document.getElementById('omokJoinCode').value.trim();
+    const err=document.getElementById('omokJoinErr');
+    if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; }
+    const {data,error}=await supa.from('omok_games').select('*').eq('room_code',code).maybeSingle();
+    if(error){ err.textContent='DB 오류: '+error.message; return; }
+    if(!data){ err.textContent='방을 찾을 수 없어요'; return; }
+    const alreadyIn=[data.black_player,data.white_player].filter(Boolean).includes(currentUser.username);
+    if(alreadyIn){
+      omokRoomCode=code; omokMyColor=data.black_player===currentUser.username?'black':'white';
+      omokSubscribeGame();
+      if(data.status==='waiting'){ document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); }
+      else omokEnterGame(data);
+      return;
+    }
+    if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; }
+    err.textContent='';
+    const myColor=data.black_player?'white':'black';
+    omokRoomCode=code; omokMyColor=myColor;
+    const updateData={status:'active',players:data.players.concat([currentUser.username])};
+    if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username;
+    const {error:upErr}=await supa.from('omok_games').update(updateData).eq('room_code',code);
+    if(upErr){ err.textContent='업데이트 오류: '+upErr.message; return; }
+    omokSubscribeGame();
+    const {data:fresh,error:fetchErr}=await supa.from('omok_games').select('*').eq('room_code',code).maybeSingle();
+    if(fetchErr){ err.textContent='재조회 오류: '+fetchErr.message; return; }
+    omokEnterGame(fresh||data);
+  } catch(e){
+    alert('참가 오류: '+e.message);
+  }
+}
 function omokSubscribeGame(){ if(omokChannel) supa.removeChannel(omokChannel); omokChannel=addChannel(supa.channel('omok-'+omokRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'omok_games',filter:'room_code=eq.'+omokRoomCode},function(p){ omokHandleUpdate(p.new); }).subscribe()); }
 function omokHandleUpdate(row){ omokCurrentRow=row; if(row.status==='waiting') return; if(!document.getElementById('omokWaitScreen').classList.contains('hidden')){ omokEnterGame(row); return; }
   if(row.black_player===currentUser.username) omokMyColor='black'; else if(row.white_player===currentUser.username) omokMyColor='white';
