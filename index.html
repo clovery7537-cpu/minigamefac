@@ -78,9 +78,10 @@ button:disabled { opacity:0.4; cursor:default; }
 .gameCardInfo { flex:1; }
 .gameCardTitle { font-size:16px; font-weight:600; margin:0 0 2px; }
 .gameCardDesc { font-size:13px; color:#6b6b66; margin:0; }
-/* 오목 모바일 최적화 */
-.omokGrid { display:inline-grid; background:#d4a017; padding:min(14px, 2vw); border-radius:4px; gap:0; }
-.omokCell { width:min(32px, calc((100vw - 80px) / 15)); height:min(32px, calc((100vw - 80px) / 15)); position:relative; cursor:pointer; }
+.boardWrap { display:flex; justify-content:center; margin:8px 0; }
+/* 오목 - 화면에 맞게 축소 */
+.omokGrid { display:inline-grid; background:#d4a017; padding:6px; border-radius:4px; gap:0; }
+.omokCell { width:calc((100vw - 88px) / 11); height:calc((100vw - 88px) / 11); max-width:36px; max-height:36px; position:relative; cursor:pointer; }
 .omokCell .hLine { position:absolute; top:50%; left:0; width:100%; height:1px; background:#5a3e00; transform:translateY(-50%); }
 .omokCell .vLine { position:absolute; left:50%; top:0; height:100%; width:1px; background:#5a3e00; transform:translateX(-50%); }
 .omokCell.first-col .hLine { left:50%; width:50%; }
@@ -91,12 +92,12 @@ button:disabled { opacity:0.4; cursor:default; }
 .omokStone.black { background:radial-gradient(circle at 35% 35%, #555, #000); }
 .omokStone.white { background:radial-gradient(circle at 35% 35%, #fff, #ccc); border:1px solid #aaa; }
 .omokStone.preview { opacity:0.4; }
-.omokLastDot { position:absolute; width:8px; height:8px; border-radius:50%; background:#e74c3c; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3; }
-.omokForbidMark { position:absolute; width:14px; height:14px; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#c0392b; }
+.omokLastDot { position:absolute; width:7px; height:7px; border-radius:50%; background:#e74c3c; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3; }
+.omokForbidMark { position:absolute; width:12px; height:12px; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#c0392b; }
 .confirmRow { display:flex; gap:8px; margin-bottom:8px; }
-/* 오델로 모바일 최적화 */
-.othelloGrid { display:inline-grid; background:#fff; padding:4px; border-radius:4px; gap:min(2px,0.5vw); border:2px solid #1a1a1a; }
-.othelloCell { width:min(44px, calc((100vw - 72px) / 8)); height:min(44px, calc((100vw - 72px) / 8)); background:#fff; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background 0.1s; }
+/* 오델로 - 화면에 맞게 확대 */
+.othelloGrid { display:inline-grid; background:#fff; padding:4px; border-radius:4px; gap:2px; border:2px solid #1a1a1a; }
+.othelloCell { width:calc((100vw - 88px) / 8); height:calc((100vw - 88px) / 8); max-width:44px; max-height:44px; background:#fff; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background 0.1s; }
 .othelloCell:hover { background:#f0f0ed; }
 .othelloCell.hint { background:#e6f0ff; }
 .othelloCell.hint::after { content:'·'; position:absolute; color:rgba(0,0,0,0.25); font-size:20px; font-weight:700; }
@@ -432,6 +433,8 @@ button:disabled { opacity:0.4; cursor:default; }
         <p class="title" id="grtFinalText"></p>
         <p class="detail" id="grtFinalDetail"></p>
       </div>
+      <p style="font-size:12px; color:#999; margin:10px 0 4px;">전체 라운드 결과</p>
+      <div id="grtFinalRoundLog" class="grtRoundLog" style="margin-bottom:10px;"></div>
       <div style="display:flex; gap:8px; margin-top:10px; justify-content:center;">
         <button id="grtRematchBtn" class="primary">한판 더!</button>
         <button id="grtLeaveBtn">나가기</button>
@@ -587,7 +590,7 @@ function bRenderChatMsg(m){ const el=document.getElementById('bGameChatList'); c
 async function bSendChat(){ const inp=document.getElementById('bGameChatInput'); const txt=inp.value.trim(); if(!txt) return; inp.value=''; await supa.from('messages').insert({room_code:bRoomCode,sender:currentUser.username,text:txt}); }
 
 /* ===== 오목 ===== */
-const OMOK_SIZE=15;
+const OMOK_SIZE=11;
 let omokRoomCode='',omokMyColor='',omokChannel=null,omokChatChannel=null;
 let omokCurrentRow=null,omokPreviewPos=null;
 
@@ -597,13 +600,13 @@ function enterOmok(){ showSection('omokSection'); omokShowSub('omokLobby'); }
 async function omokCreate(){ for(let i=0;i<5;i++){ const code=genCode(); const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); } const myColor=Math.random()<0.5?'black':'white'; const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black',last_move:null}; if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username; const {error}=await supa.from('omok_games').insert(insertData); if(!error){ omokRoomCode=code; omokMyColor=myColor; document.getElementById('omokWaitCode').textContent=code; omokShowSub('omokWaitScreen'); omokSubscribeGame(); return; } } alert('방 생성 실패'); }
 async function omokJoin(){ const code=document.getElementById('omokJoinCode').value.trim(); const err=document.getElementById('omokJoinErr'); if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; } const {data,error}=await supa.from('omok_games').select('*').eq('room_code',code).maybeSingle(); if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; } if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; } err.textContent=''; const myColor=data.black_player?'white':'black'; omokRoomCode=code; omokMyColor=myColor; const updateData={status:'active',players:data.players.concat([currentUser.username])}; if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username; await supa.from('omok_games').update(updateData).eq('room_code',code); omokSubscribeGame(); omokEnterGame(data); }
 function omokSubscribeGame(){ if(omokChannel) supa.removeChannel(omokChannel); omokChannel=addChannel(supa.channel('omok-'+omokRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'omok_games',filter:'room_code=eq.'+omokRoomCode},function(p){ omokHandleUpdate(p.new); }).subscribe()); }
-function omokHandleUpdate(row){ omokCurrentRow=row; if(row.status==='waiting') return; if(!document.getElementById('omokWaitScreen').classList.contains('hidden')){ omokEnterGame(row); return; } if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){ const players=[row.black_player,row.white_player].filter(Boolean); if(players.every(function(p){ return row.rematch_ready.includes(p); })){ const isAllNull=row.board.every(function(r){ return r.every(function(c){ return c===null; }); }); if(isAllNull){ if(omokMyColor==='black') omokMyColor='white'; else omokMyColor='black'; document.getElementById('omokResultBox').style.display='none'; document.getElementById('omokResultBox').classList.add('hidden'); document.getElementById('omokRematchBtn').classList.remove('hidden'); document.getElementById('omokRematchNote').classList.add('hidden'); } } } omokPreviewPos=null; omokRenderBoard(row); omokUpdateBanner(row); if(row.status==='finished') omokShowResult(row); }
+function omokHandleUpdate(row){ omokCurrentRow=row; if(row.status==='waiting') return; if(!document.getElementById('omokWaitScreen').classList.contains('hidden')){ omokEnterGame(row); return; } if(row.status==='active'){ document.getElementById('omokResultBox').style.display='none'; document.getElementById('omokResultBox').classList.add('hidden'); document.getElementById('omokRematchBtn').classList.remove('hidden'); document.getElementById('omokRematchNote').classList.add('hidden'); if(row.black_player===currentUser.username) omokMyColor='black'; else if(row.white_player===currentUser.username) omokMyColor='white'; } omokPreviewPos=null; omokRenderBoard(row); omokUpdateBanner(row); if(row.status==='finished') omokShowResult(row); }
 function omokEnterGame(row){ omokCurrentRow=row; document.getElementById('omokGameCode').textContent=omokRoomCode; omokShowSub('omokGameScreen'); saveGameSession('omok',omokRoomCode,omokMyColor); omokRenderBoard(row); omokUpdateBanner(row); omokLoadChat(); omokSubscribeChat(); if(row.status==='finished') omokShowResult(row); }
 function omokUpdateBanner(row){ if(row.status==='finished'){ document.getElementById('omokTurnBanner').textContent='게임 종료'; return; } const isMyTurn=row.current_turn===omokMyColor; const curName=row.current_turn==='black'?(row.black_player||'흑'):(row.white_player||'백'); const colorLabel=row.current_turn==='black'?'흑돌':'백돌'; document.getElementById('omokTurnBanner').textContent=isMyTurn?('내 차례예요! ('+colorLabel+')'):(curName+'님의 차례 ('+colorLabel+')'); }
 
 function omokRenderBoard(row){
   const boardEl=document.getElementById('omokBoard');
-  boardEl.style.gridTemplateColumns='repeat('+OMOK_SIZE+', 32px)';
+  boardEl.style.gridTemplateColumns='repeat('+OMOK_SIZE+', calc((100vw - 88px) / 11))';
   boardEl.innerHTML='';
   const isMyTurn=row.current_turn===omokMyColor&&row.status==='active';
   const isBlackTurn=row.current_turn==='black';
@@ -663,7 +666,7 @@ function omokCheckWin(board,r,c,color){ const dirs=[[0,1],[1,0],[1,1],[1,-1]]; f
 function omokShowResult(row){ const rBox=document.getElementById('omokResultBox'); rBox.classList.remove('hidden'); rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':'loseBox'); rBox.style.display='block'; document.getElementById('omokResultText').textContent=row.winner===currentUser.username?'🏆 승리했어요!':'😢 패배했어요'; }
 async function omokLeave(){ if(omokRoomCode){ const {data}=await supa.from('omok_games').select('*').eq('room_code',omokRoomCode).maybeSingle(); if(data&&data.status==='active'){ const opponent=omokMyColor==='black'?data.white_player:data.black_player; if(opponent) await supa.from('omok_games').update({status:'finished',winner:opponent}).eq('room_code',omokRoomCode); } } if(omokChannel){ supa.removeChannel(omokChannel); omokChannel=null; } if(omokChatChannel){ supa.removeChannel(omokChatChannel); omokChatChannel=null; } clearGameSession(); omokRoomCode=''; omokMyColor=''; omokPreviewPos=null; enterOmok(); }
 async function omokRematch(){ const {data}=await supa.from('omok_games').select('*').eq('room_code',omokRoomCode).maybeSingle(); if(!data) return; const ready=(data.rematch_ready||[]).slice(); if(!ready.includes(currentUser.username)) ready.push(currentUser.username); await supa.from('omok_games').update({rematch_ready:ready}).eq('room_code',omokRoomCode); document.getElementById('omokRematchBtn').classList.add('hidden'); document.getElementById('omokRematchNote').classList.remove('hidden'); const players=[data.black_player,data.white_player].filter(Boolean); if(players.every(function(p){ return ready.includes(p); })) await omokStartRematch(data); }
-async function omokStartRematch(oldRow){ const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); } const newBlack=oldRow.white_player; const newWhite=oldRow.black_player; if(omokMyColor==='black') omokMyColor='white'; else omokMyColor='black'; await supa.from('omok_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[],last_move:null}).eq('room_code',omokRoomCode); document.getElementById('omokResultBox').style.display='none'; document.getElementById('omokResultBox').classList.add('hidden'); document.getElementById('omokRematchBtn').classList.remove('hidden'); document.getElementById('omokRematchNote').classList.add('hidden'); }
+async function omokStartRematch(oldRow){ const board=[]; for(let r=0;r<OMOK_SIZE;r++){ board.push([]); for(let c=0;c<OMOK_SIZE;c++) board[r].push(null); } const newBlack=oldRow.white_player; const newWhite=oldRow.black_player; await supa.from('omok_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[],last_move:null}).eq('room_code',omokRoomCode); }
 function omokSubscribeChat(){ if(omokChatChannel) supa.removeChannel(omokChatChannel); omokChatChannel=addChannel(supa.channel('omok-chat-'+omokRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+omokRoomCode},function(p){ omokAppendChat(p.new); }).subscribe()); }
 async function omokLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',omokRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('omokChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ omokRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
 function omokAppendChat(m){ omokRenderChatMsg(m); const el=document.getElementById('omokChatList'); el.scrollTop=el.scrollHeight; }
@@ -681,7 +684,7 @@ function otInitBoard(){ const b=[]; for(let i=0;i<OT_SIZE;i++){ b.push([]); for(
 async function otCreate(){ for(let i=0;i<5;i++){ const code=genCode(); const board=otInitBoard(); const myColor=Math.random()<0.5?'black':'white'; const insertData={room_code:code,status:'waiting',players:[currentUser.username],board:board,current_turn:'black'}; if(myColor==='black') insertData.black_player=currentUser.username; else insertData.white_player=currentUser.username; const {error}=await supa.from('othello_games').insert(insertData); if(!error){ otRoomCode=code; otMyColor=myColor; document.getElementById('othelloWaitCode').textContent=code; otShowSub('othelloWaitScreen'); otSubscribeGame(); return; } } alert('방 생성 실패'); }
 async function otJoin(){ const code=document.getElementById('othelloJoinCode').value.trim(); const err=document.getElementById('othelloJoinErr'); if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; } const {data,error}=await supa.from('othello_games').select('*').eq('room_code',code).maybeSingle(); if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; } if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; } err.textContent=''; const myColor=data.black_player?'white':'black'; otRoomCode=code; otMyColor=myColor; const updateData={status:'active',players:data.players.concat([currentUser.username])}; if(myColor==='white') updateData.white_player=currentUser.username; else updateData.black_player=currentUser.username; await supa.from('othello_games').update(updateData).eq('room_code',code); otSubscribeGame(); const {data:fresh}=await supa.from('othello_games').select('*').eq('room_code',code).single(); otEnterGame(fresh||data); }
 function otSubscribeGame(){ if(otChannel) supa.removeChannel(otChannel); otChannel=addChannel(supa.channel('othello-'+otRoomCode).on('postgres_changes',{event:'UPDATE',schema:'public',table:'othello_games',filter:'room_code=eq.'+otRoomCode},function(p){ otHandleUpdate(p.new); }).subscribe()); }
-function otHandleUpdate(row){ otCurrentRow=row; if(row.status==='waiting') return; if(!document.getElementById('othelloWaitScreen').classList.contains('hidden')){ otEnterGame(row); return; } if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){ const players=[row.black_player,row.white_player].filter(Boolean); if(players.every(function(p){ return row.rematch_ready.includes(p); })){ const isAllNull=row.board.every(function(r){ return r.every(function(c){ return c===null; }); }); if(isAllNull){ if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); } } } otPreviewPos=null; document.getElementById('othelloPreviewInfo').classList.add('hidden'); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); if(row.status==='finished') otShowResult(row); }
+function otHandleUpdate(row){ otCurrentRow=row; if(row.status==='waiting') return; if(!document.getElementById('othelloWaitScreen').classList.contains('hidden')){ otEnterGame(row); return; } if(row.status==='active'){ document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); if(row.black_player===currentUser.username) otMyColor='black'; else if(row.white_player===currentUser.username) otMyColor='white'; } otPreviewPos=null; document.getElementById('othelloPreviewInfo').classList.add('hidden'); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); if(row.status==='finished') otShowResult(row); }
 function otEnterGame(row){ otCurrentRow=row; document.getElementById('othelloGameCode').textContent=otRoomCode; otShowSub('othelloGameScreen'); saveGameSession('othello',otRoomCode,otMyColor); otRenderBoard(row); otUpdateBanner(row); otUpdateScore(row); otLoadChat(); otSubscribeChat(); if(row.status==='finished') otShowResult(row); }
 function otUpdateBanner(row){ if(row.status==='finished'){ document.getElementById('othelloTurnBanner').textContent='게임 종료'; return; } const isMyTurn=row.current_turn===otMyColor; const curName=row.current_turn==='black'?(row.black_player||'흑'):(row.white_player||'백'); document.getElementById('othelloTurnBanner').textContent=isMyTurn?'내 차례예요!':(curName+'님의 차례'); const colorLabel=otMyColor==='black'?'흑돌 ⚫':'백돌 ⚪'; document.getElementById('othelloMyColorNote').textContent='내 돌: '+colorLabel; }
 function otUpdateScore(row){ let black=0,white=0; for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++){ if(row.board[r][c]==='black') black++; else if(row.board[r][c]==='white') white++; } document.getElementById('blackScore').textContent=black; document.getElementById('whiteScore').textContent=white; const bName=row.black_player||(otMyColor==='black'?currentUser.username:'?'); const wName=row.white_player||(otMyColor==='white'?currentUser.username:'?'); document.getElementById('blackPlayerName').textContent='('+bName+(bName===currentUser.username?' · 나':'')+')'+(bName===currentUser.username?' ★':''); document.getElementById('whitePlayerName').textContent='('+wName+(wName===currentUser.username?' · 나':'')+')'+(wName===currentUser.username?' ★':''); }
@@ -724,7 +727,7 @@ async function otPlaceStone(r,c,row){ const flips=otGetFlips(row.board,r,c,otMyC
 function otShowResult(row){ const rBox=document.getElementById('othelloResultBox'); rBox.classList.remove('hidden'); rBox.style.display='block'; let txt; if(row.winner==='draw') txt='무승부예요'; else if(row.winner===currentUser.username) txt='🏆 승리했어요!'; else txt='😢 패배했어요'; rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':row.winner==='draw'?'drawBox':'loseBox'); document.getElementById('othelloResultText').textContent=txt; }
 async function otLeave(){ if(otRoomCode){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(data&&data.status==='active'){ const opponent=otMyColor==='black'?data.white_player:data.black_player; if(opponent) await supa.from('othello_games').update({status:'finished',winner:opponent}).eq('room_code',otRoomCode); } } if(otChannel){ supa.removeChannel(otChannel); otChannel=null; } if(otChatChannel){ supa.removeChannel(otChatChannel); otChatChannel=null; } clearGameSession(); otRoomCode=''; otMyColor=''; otPreviewPos=null; otCurrentRow=null; enterOthello(); }
 async function otRematch(){ const {data}=await supa.from('othello_games').select('*').eq('room_code',otRoomCode).maybeSingle(); if(!data) return; const ready=(data.rematch_ready||[]).slice(); if(!ready.includes(currentUser.username)) ready.push(currentUser.username); await supa.from('othello_games').update({rematch_ready:ready}).eq('room_code',otRoomCode); document.getElementById('othelloRematchBtn').classList.add('hidden'); document.getElementById('othelloRematchNote').classList.remove('hidden'); const players=[data.black_player,data.white_player].filter(Boolean); if(players.every(function(p){ return ready.includes(p); })) await otStartRematch(data); }
-async function otStartRematch(oldRow){ const board=otInitBoard(); const newBlack=oldRow.white_player; const newWhite=oldRow.black_player; if(otMyColor==='black') otMyColor='white'; else otMyColor='black'; await supa.from('othello_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[],pass_count:0}).eq('room_code',otRoomCode); document.getElementById('othelloResultBox').style.display='none'; document.getElementById('othelloResultBox').classList.add('hidden'); document.getElementById('othelloRematchBtn').classList.remove('hidden'); document.getElementById('othelloRematchNote').classList.add('hidden'); }
+async function otStartRematch(oldRow){ const board=otInitBoard(); const newBlack=oldRow.white_player; const newWhite=oldRow.black_player; await supa.from('othello_games').update({board:board,status:'active',current_turn:'black',winner:null,black_player:newBlack,white_player:newWhite,rematch_ready:[],pass_count:0,last_move:null}).eq('room_code',otRoomCode); }
 function otSubscribeChat(){ if(otChatChannel) supa.removeChannel(otChatChannel); otChatChannel=addChannel(supa.channel('ot-chat-'+otRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+otRoomCode},function(p){ otAppendChat(p.new); }).subscribe()); }
 async function otLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',otRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('othelloChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ otRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
 function otAppendChat(m){ otRenderChatMsg(m); const el=document.getElementById('othelloChatList'); el.scrollTop=el.scrollHeight; }
@@ -913,15 +916,18 @@ function grtHandleUpdate(row){
   grtCurrentRow=row;
   if(row.status==='waiting') return;
   if(!document.getElementById('grtWaitScreen').classList.contains('hidden')){ grtEnterGame(row); return; }
-  // 리매치 처리
-  if(row.status==='finished'&&row.rematch_ready&&row.rematch_ready.length>=2){
-    const players=[row.red_player,row.blue_player].filter(Boolean);
-    if(players.every(function(p){ return row.rematch_ready.includes(p); })&&row.current_round===1){
-      document.getElementById('grtFinalResult').classList.add('hidden');
-      document.getElementById('grtRoundResult').classList.add('hidden');
-      document.getElementById('grtRematchBtn').classList.remove('hidden');
-      document.getElementById('grtRematchNote').classList.add('hidden');
-    }
+  // 리매치 시작 감지: status가 active로 바뀌고 current_round===1이면 새 게임
+  if(row.status==='active'&&(row.current_round||1)===1&&(row.rounds||[]).length===0){
+    // 팀 동기화 (DB 기준)
+    if(row.red_player===currentUser.username) grtMyTeam='red';
+    else if(row.blue_player===currentUser.username) grtMyTeam='blue';
+    document.getElementById('grtFinalResult').classList.add('hidden');
+    document.getElementById('grtRoundResult').classList.add('hidden');
+    document.getElementById('grtPlayArea').classList.remove('hidden');
+    document.getElementById('grtRematchBtn').classList.remove('hidden');
+    document.getElementById('grtRematchNote').classList.add('hidden');
+    grtSelectedTile=null;
+    saveGameSession('grt',grtRoomCode,grtMyTeam);
   }
   grtRenderGame(row);
 }
@@ -969,12 +975,12 @@ function grtRenderGame(row){
 
   if(redPlaced!==null){
     const isOdd=redPlaced%2!==0;
-    redSlotEl.innerHTML='<div class="grtTile '+(isOdd?'black-tile':'white-tile')+' facedown" style="width:50px;height:50px;font-size:0;"></div><span style="font-size:11px; color:#c0392b;">배치 완료</span>';
+    redSlotEl.innerHTML='<div class="grtTile '+(isOdd?'black-tile':'white-tile')+'" style="width:50px;height:50px;font-size:0;"></div><span style="font-size:11px; color:#c0392b;">배치 완료</span>';
   } else { redSlotEl.innerHTML='<span style="font-size:13px; color:#999;">미배치</span>'; }
 
   if(bluePlaced!==null){
     const isOdd=bluePlaced%2!==0;
-    blueSlotEl.innerHTML='<div class="grtTile '+(isOdd?'black-tile':'white-tile')+' facedown" style="width:50px;height:50px;font-size:0;"></div><span style="font-size:11px; color:#2563eb;">배치 완료</span>';
+    blueSlotEl.innerHTML='<div class="grtTile '+(isOdd?'black-tile':'white-tile')+'" style="width:50px;height:50px;font-size:0;"></div><span style="font-size:11px; color:#2563eb;">배치 완료</span>';
   } else { blueSlotEl.innerHTML='<span style="font-size:13px; color:#999;">미배치</span>'; }
 
   // 내 차례 여부 판단
@@ -1108,6 +1114,7 @@ async function grtNextRound(){
 }
 
 function tileColorIcon(n){ const isOdd=n%2!==0; return '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;'+(isOdd?'background:#1a1a1a;':'background:#fff;border:1.5px solid #aaa;')+'"></span>'; }
+function tileNumIcon(n){ const isOdd=n%2!==0; return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;font-size:13px;font-weight:700;'+(isOdd?'background:#1a1a1a;color:#fff;':'background:#fff;color:#1a1a1a;border:1.5px solid #aaa;')+'">'+n+'</span>'; }
 
 function grtRenderRoundLog(rounds){
   const el=document.getElementById('grtRoundLog'); el.innerHTML='';
@@ -1132,7 +1139,18 @@ function grtRenderFinal(row){
   box.className='resultBox '+(w==='draw'?'drawBox':isMyWin?'winBox':'loseBox');
   document.getElementById('grtFinalText').textContent=w==='draw'?'무승부예요':(isMyWin?'🏆 승리했어요!':'😢 패배했어요');
   document.getElementById('grtFinalDetail').textContent='🔴 '+row.red_score+'점 · 🔵 '+row.blue_score+'점';
-  grtRenderRoundLog(row.rounds||[]);
+  // 라운드 기록을 최종 결과창에도 표시 (숫자 공개)
+  const finalLog=document.getElementById('grtFinalRoundLog');
+  finalLog.innerHTML='';
+  (row.rounds||[]).forEach(function(r){
+    const wl=r.winner==='red'?'🔴 승':r.winner==='blue'?'🔵 승':'무';
+    const d=document.createElement('div'); d.className='grtRoundRow';
+    d.innerHTML='<span style="color:#999;font-size:12px;min-width:24px;">R'+r.round+'</span>'
+      +'<span>🔴 '+tileNumIcon(r.red)+'</span>'
+      +'<span>🔵 '+tileNumIcon(r.blue)+'</span>'
+      +'<span style="font-weight:600;">'+wl+'</span>';
+    finalLog.appendChild(d);
+  });
   refreshUser();
 }
 
@@ -1145,9 +1163,8 @@ async function grtRematch(){
   document.getElementById('grtRematchNote').classList.remove('hidden');
   const players=[data.red_player,data.blue_player].filter(Boolean);
   if(players.every(function(p){ return ready.includes(p); })){
-    // 팀 교체 후 리셋
+    // 팀 교체: red↔blue, 팀 동기화는 grtHandleUpdate에서 DB 기준으로 처리
     const newRed=data.blue_player; const newBlue=data.red_player;
-    if(grtMyTeam==='red') grtMyTeam='blue'; else grtMyTeam='red';
     await supa.from('guryongtu_games').update({status:'active',red_player:newRed,blue_player:newBlue,red_tiles:[1,2,3,4,5,6,7,8,9],blue_tiles:[1,2,3,4,5,6,7,8,9],red_score:0,blue_score:0,current_round:1,first_color:Math.random()<0.5?'red':'blue',phase:'place_first',placed_first:null,placed_second:null,rounds:[],winner:null,rematch_ready:[]}).eq('room_code',grtRoomCode);
   }
 }
