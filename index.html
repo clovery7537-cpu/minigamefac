@@ -609,6 +609,8 @@ async function bSendChat(){ const inp=document.getElementById('bGameChatInput');
 /* ===== 오목 ===== */
 const OMOK_SIZE=15;
 let omokWhiteTheme = localStorage.getItem('omok_theme')==='white';
+let omokRoomCode='',omokMyColor='',omokChannel=null,omokChatChannel=null;
+let omokCurrentRow=null,omokPreviewPos=null;
 function applyOmokTheme(){
   const board=document.getElementById('omokBoard');
   if(!board) return;
