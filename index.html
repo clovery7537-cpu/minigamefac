@@ -716,10 +716,65 @@ async function omokConfirmPlace(){
   await supa.from('omok_games').update(update).eq('room_code',omokRoomCode);
 }
 
-function omokCountDir(board,r,c,dr,dc,color){ let count=0; let nr=r+dr,nc=c+dc; while(nr>=0&&nr<OMOK_SIZE&&nc>=0&&nc<OMOK_SIZE&&board[nr][nc]===color){ count++; nr+=dr; nc+=dc; } return count; }
-function omokOpenEnds(board,r,c,dr,dc,color){ let open=0; let cnt=omokCountDir(board,r,c,dr,dc,color); const er=r+dr*(cnt+1),ec=c+dc*(cnt+1); if(er>=0&&er<OMOK_SIZE&&ec>=0&&ec<OMOK_SIZE&&board[er][ec]===null) open++; let cnt2=omokCountDir(board,r,c,-dr,-dc,color); const er2=r-dr*(cnt2+1),ec2=c-dc*(cnt2+1); if(er2>=0&&er2<OMOK_SIZE&&ec2>=0&&ec2<OMOK_SIZE&&board[er2][ec2]===null) open++; return open; }
-function omokLineCount(board,r,c,dr,dc,color){ return 1+omokCountDir(board,r,c,dr,dc,color)+omokCountDir(board,r,c,-dr,-dc,color); }
-function omokIsForbidden(board,r,c){ const testBoard=board.map(function(row){ return row.slice(); }); testBoard[r][c]='black'; const dirs=[[0,1],[1,0],[1,1],[1,-1]]; let openThrees=0,openFours=0; for(const [dr,dc] of dirs){ const cnt=omokLineCount(testBoard,r,c,dr,dc,'black'); if(cnt>=6) return true; if(cnt===4){ const open=omokOpenEnds(testBoard,r,c,dr,dc,'black'); if(open>=1) openFours++; } if(cnt===3){ const open=omokOpenEnds(testBoard,r,c,dr,dc,'black'); if(open===2) openThrees++; } } if(openFours>=2) return true; if(openThrees>=2) return true; return false; }
+// 특정 방향으로 창(window) 추출 (OOB는 벽으로 처리)
+function omokGetWindow(board,r,c,dr,dc,start,len){
+  const cells=[];
+  for(let i=0;i<len;i++){
+    const nr=r+(start+i)*dr, nc=c+(start+i)*dc;
+    if(nr<0||nr>=OMOK_SIZE||nc<0||nc>=OMOK_SIZE) cells.push('W');
+    else cells.push(board[nr][nc]);
+  }
+  return cells;
+}
+
+// 방향별 4(사)가 있는지 — 5칸 창에 흑4 + 빈1 (벽/백 없음)
+function omokHasFourInDir(board,r,c,dr,dc){
+  for(let s=-4;s<=0;s++){
+    const w=omokGetWindow(board,r,c,dr,dc,s,5);
+    if(w.includes('W')||w.includes('white')) continue;
+    if(w.filter(function(x){ return x==='black'; }).length===4) return true;
+  }
+  return false;
+}
+
+// 방향별 열린3이 있는지 — 6칸 창에서 양끝 빈칸, 내부 4칸에 흑3 + 빈1 (벽/백 없음)
+function omokHasOpenThreeInDir(board,r,c,dr,dc){
+  for(let s=-5;s<=0;s++){
+    const w=omokGetWindow(board,r,c,dr,dc,s,6);
+    if(w.includes('W')||w.includes('white')) continue;
+    if(w[0]!==null||w[5]!==null) continue; // 양끝 빈칸
+    const inner=w.slice(1,5);
+    if(inner.filter(function(x){ return x==='black'; }).length===3) return true;
+  }
+  return false;
+}
+
+function omokIsForbidden(board,r,c){
+  const testBoard=board.map(function(row){ return row.slice(); });
+  testBoard[r][c]='black';
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  // 장목(6목 이상) 검사
+  for(const [dr,dc] of dirs){
+    if(omokLineCount(testBoard,r,c,dr,dc,'black')>=6) return true;
+  }
+  // 5목이면 금수 아님 (승리)
+  for(const [dr,dc] of dirs){
+    if(omokLineCount(testBoard,r,c,dr,dc,'black')===5) return false;
+  }
+  // 4-4 검사
+  let fours=0;
+  for(const [dr,dc] of dirs){
+    if(omokHasFourInDir(testBoard,r,c,dr,dc)) fours++;
+  }
+  if(fours>=2) return true;
+  // 3-3 검사
+  let threes=0;
+  for(const [dr,dc] of dirs){
+    if(omokHasOpenThreeInDir(testBoard,r,c,dr,dc)) threes++;
+  }
+  if(threes>=2) return true;
+  return false;
+}
 function omokCheckWin(board,r,c,color){ const dirs=[[0,1],[1,0],[1,1],[1,-1]]; for(const [dr,dc] of dirs){ const cnt=omokLineCount(board,r,c,dr,dc,color); if(color==='black'){ if(cnt===5) return true; } else { if(cnt>=5) return true; } } return false; }
 
 function omokShowResult(row){ const rBox=document.getElementById('omokResultBox'); rBox.classList.remove('hidden'); rBox.className='resultBox '+(row.winner===currentUser.username?'winBox':'loseBox'); rBox.style.display='block'; document.getElementById('omokResultText').textContent=row.winner===currentUser.username?'🏆 승리했어요!':'😢 패배했어요'; }
