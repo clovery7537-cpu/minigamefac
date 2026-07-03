@@ -80,8 +80,8 @@ button:disabled { opacity:0.4; cursor:default; }
 .gameCardDesc { font-size:13px; color:#6b6b66; margin:0; }
 .boardWrap { display:flex; justify-content:center; margin:8px 0; }
 /* 오목 - 화면에 맞게 축소 */
-.omokGrid { display:inline-grid; background:#d4a017; padding:6px; border-radius:4px; gap:0; }
-.omokCell { width:calc((100vw - 88px) / 11); height:calc((100vw - 88px) / 11); max-width:36px; max-height:36px; position:relative; cursor:pointer; }
+.omokGrid { display:inline-grid; background:#d4a017; padding:6px; border-radius:4px; gap:0; grid-template-columns:repeat(13, min(30px, calc((100vw - 92px) / 13))); }
+.omokCell { width:min(30px, calc((100vw - 92px) / 13)); height:min(30px, calc((100vw - 92px) / 13)); position:relative; cursor:pointer; }
 .omokCell .hLine { position:absolute; top:50%; left:0; width:100%; height:1px; background:#5a3e00; transform:translateY(-50%); }
 .omokCell .vLine { position:absolute; left:50%; top:0; height:100%; width:1px; background:#5a3e00; transform:translateX(-50%); }
 .omokCell.first-col .hLine { left:50%; width:50%; }
@@ -96,8 +96,8 @@ button:disabled { opacity:0.4; cursor:default; }
 .omokForbidMark { position:absolute; width:12px; height:12px; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#c0392b; }
 .confirmRow { display:flex; gap:8px; margin-bottom:8px; }
 /* 오델로 - 화면에 맞게 확대 */
-.othelloGrid { display:inline-grid; background:#fff; padding:4px; border-radius:4px; gap:2px; border:2px solid #1a1a1a; }
-.othelloCell { width:calc((100vw - 88px) / 8); height:calc((100vw - 88px) / 8); max-width:44px; max-height:44px; background:#fff; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background 0.1s; }
+.othelloGrid { display:inline-grid; background:#fff; padding:4px; border-radius:4px; gap:2px; border:2px solid #1a1a1a; grid-template-columns:repeat(8, min(44px, calc((100vw - 102px) / 8))); }
+.othelloCell { width:min(44px, calc((100vw - 102px) / 8)); height:min(44px, calc((100vw - 102px) / 8)); background:#fff; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background 0.1s; }
 .othelloCell:hover { background:#f0f0ed; }
 .othelloCell.hint { background:#e6f0ff; }
 .othelloCell.hint::after { content:'·'; position:absolute; color:rgba(0,0,0,0.25); font-size:20px; font-weight:700; }
@@ -590,7 +590,7 @@ function bRenderChatMsg(m){ const el=document.getElementById('bGameChatList'); c
 async function bSendChat(){ const inp=document.getElementById('bGameChatInput'); const txt=inp.value.trim(); if(!txt) return; inp.value=''; await supa.from('messages').insert({room_code:bRoomCode,sender:currentUser.username,text:txt}); }
 
 /* ===== 오목 ===== */
-const OMOK_SIZE=11;
+const OMOK_SIZE=13;
 let omokRoomCode='',omokMyColor='',omokChannel=null,omokChatChannel=null;
 let omokCurrentRow=null,omokPreviewPos=null;
 
@@ -606,7 +606,7 @@ function omokUpdateBanner(row){ if(row.status==='finished'){ document.getElement
 
 function omokRenderBoard(row){
   const boardEl=document.getElementById('omokBoard');
-  boardEl.style.gridTemplateColumns='repeat('+OMOK_SIZE+', calc((100vw - 88px) / 11))';
+  // grid-template-columns handled by CSS
   boardEl.innerHTML='';
   const isMyTurn=row.current_turn===omokMyColor&&row.status==='active';
   const isBlackTurn=row.current_turn==='black';
@@ -692,7 +692,7 @@ function otGetFlips(board,r,c,color){ const opp=color==='black'?'white':'black';
 function otGetValidMoves(board,color){ const moves=[]; for(let r=0;r<OT_SIZE;r++) for(let c=0;c<OT_SIZE;c++) if(!board[r][c]&&otGetFlips(board,r,c,color).length>0) moves.push([r,c]); return moves; }
 function otRenderBoard(row){
   const boardEl=document.getElementById('othelloBoard');
-  boardEl.style.gridTemplateColumns='repeat('+OT_SIZE+', 44px)';
+  // grid-template-columns handled by CSS
   boardEl.innerHTML='';
   const isMyTurn=row.current_turn===otMyColor&&row.status==='active';
   const validMoves=isMyTurn?otGetValidMoves(row.board,otMyColor):[];
