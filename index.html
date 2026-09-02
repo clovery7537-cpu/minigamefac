@@ -555,7 +555,7 @@ button:disabled { opacity:0.4; cursor:default; }
 
     <div id="bingoMyStatus" style="text-align:center; font-size:13px; color:#999; margin-bottom:8px;"></div>
 
-    <div id="bingoOtherBoardsToggle" style="margin-bottom:8px;">
+    <div id="bingoOtherBoardsToggle" class="hidden" style="margin-bottom:8px;">
       <button id="bingoShowOthersBtn" style="width:100%; font-size:13px;">다른 사람 진행 상황 보기</button>
     </div>
     <div id="bingoOtherBoards" class="hidden"></div>
@@ -1447,6 +1447,7 @@ document.getElementById('tabGameGrt').addEventListener('click',function(){ lbGam
 /* ===== 빙고 ===== */
 let bingoRoomCode='', bingoMyUsername='', bingoChannel=null, bingoChatChannel=null, bingoCurrentRow=null;
 let bingoCreateTarget='3', bingoCreateRange=25, bingoCreateMax=6;
+let bingoSkipInProgress=false;
 
 function bingoShowSub(id){ ['bingoLobby','bingoCreateScreen','bingoJoinScreen','bingoLobbyScreen','bingoGameScreen'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); }); }
 function enterBingo(){ showSection('bingoSection'); bingoShowSub('bingoLobby'); }
@@ -1496,6 +1497,7 @@ function bingoTargetLines(target){
 }
 
 async function bingoCreate(){
+  let lastErr=null;
   for(let i=0;i<5;i++){
     const code=genCode();
     const board=bingoGenerateBoard(bingoCreateRange);
@@ -1506,8 +1508,9 @@ async function bingoCreate(){
       called_numbers:[], last_call:null, finished_count:0
     });
     if(!error){ bingoRoomCode=code; document.getElementById('bingoLobbyCode').textContent=code; bingoShowSub('bingoLobbyScreen'); bingoSubscribeGame(); return; }
+    lastErr=error;
   }
-  document.getElementById('bingoCreateErr').textContent='방 생성 실패. 다시 시도해주세요';
+  document.getElementById('bingoCreateErr').textContent='방 생성 실패: '+(lastErr?lastErr.message:'알 수 없는 오류');
 }
 
 async function bingoJoin(){
@@ -1599,8 +1602,9 @@ function bingoRenderGame(row){
       const turnUser=row.turn_order[row.current_turn_index % row.turn_order.length];
       const turnPlayer=players.find(function(p){ return p.username===turnUser; });
       if(turnPlayer && turnPlayer.completed_at){
-        // 완료한 사람 차례면 서버에서 넘겨야 하지만 클라단에서도 스킵 표시
         document.getElementById('bingoTurnBanner').textContent='다음 차례 확인 중...';
+        // 안전장치: 완료한 본인 클라이언트가 자기 턴이 잘못 넘어와 있는 걸 감지하면 스스로 다음 사람에게 넘김
+        if(turnUser===currentUser.username){ bingoSkipCompletedTurn(row); }
       } else if(turnUser===currentUser.username){
         document.getElementById('bingoTurnBanner').textContent='내 차례예요! 숫자를 선택하세요';
       } else {
@@ -1649,6 +1653,17 @@ function bingoRenderGame(row){
   if(me){
     const lines=bingoCountLines(me.board);
     document.getElementById('bingoMyStatus').textContent = me.completed_at ? ('완료! '+me.rank+'등') : ('현재 '+lines+'줄 / 목표 '+target+'줄');
+  }
+
+  // 완료하기 전에는 다른 사람 판을 볼 수 없음
+  const toggleWrap=document.getElementById('bingoOtherBoardsToggle');
+  if(me && me.completed_at){
+    toggleWrap.classList.remove('hidden');
+  } else {
+    toggleWrap.classList.add('hidden');
+    document.getElementById('bingoOtherBoards').classList.add('hidden');
+    document.getElementById('bingoOtherBoards').innerHTML='';
+    document.getElementById('bingoShowOthersBtn').textContent='다른 사람 진행 상황 보기';
   }
 
   // 마지막 선택 로그
@@ -1700,6 +1715,34 @@ function bingoRenderOtherBoards(row){
   });
 }
 
+async function bingoSkipCompletedTurn(row){
+  // 중복 실행 방지
+  if(bingoSkipInProgress) return;
+  bingoSkipInProgress=true;
+  try{
+    const {data:fresh}=await supa.from('bingo_games').select('*').eq('room_code',bingoRoomCode).single();
+    if(!fresh || fresh.status!=='active') return;
+    const turnUser=fresh.turn_order[fresh.current_turn_index % fresh.turn_order.length];
+    if(turnUser!==currentUser.username) return;
+    const me=fresh.players.find(function(p){ return p.username===currentUser.username; });
+    if(!me || !me.completed_at) return; // 이미 정상 상태면 아무것도 안 함
+    const order=fresh.turn_order;
+    let nextIdx=fresh.current_turn_index;
+    let foundNext=false;
+    for(let i=1;i<=order.length;i++){
+      const idx=(fresh.current_turn_index+i)%order.length;
+      const u=order[idx];
+      const p=fresh.players.find(function(pp){ return pp.username===u; });
+      if(p && !p.completed_at){ nextIdx=idx; foundNext=true; break; }
+    }
+    if(foundNext){
+      await supa.from('bingo_games').update({current_turn_index:nextIdx}).eq('room_code',bingoRoomCode);
+    }
+  } finally {
+    bingoSkipInProgress=false;
+  }
+}
+
 async function bingoPickNumber(num){
   const {data:row}=await supa.from('bingo_games').select('*').eq('room_code',bingoRoomCode).single();
   if(!row || row.status!=='active') return;
@@ -1731,15 +1774,17 @@ async function bingoPickNumber(num){
 
   const calledNumbers=(row.called_numbers||[]).concat([{number:num, by:currentUser.username}]);
 
-  // 다음 턴 계산: 완료 안 한 사람 중 다음
-  let nextIdx=row.current_turn_index;
+  // 다음 턴 계산: 내 원래 순서(현재 턴 인덱스) 다음부터 turn_order를 돌면서, 미완료인 첫 사람을 찾음
   const order=row.turn_order;
+  let nextIdx=row.current_turn_index;
+  let foundNext=false;
   for(let i=1;i<=order.length;i++){
     const idx=(row.current_turn_index+i)%order.length;
     const u=order[idx];
     const p=players.find(function(pp){ return pp.username===u; });
-    if(p && !p.completed_at){ nextIdx=idx; break; }
+    if(p && !p.completed_at){ nextIdx=idx; foundNext=true; break; }
   }
+  if(!foundNext) nextIdx=row.current_turn_index;
 
   // 전원 완료 체크 → 순위 부여 및 종료
   const allDone=players.every(function(p){ return p.completed_at; });
