@@ -1749,6 +1749,9 @@ async function bingoPickNumber(num){
   const turnUser=row.turn_order[row.current_turn_index % row.turn_order.length];
   if(turnUser!==currentUser.username) return;
 
+  const target=bingoTargetLines(row.bingo_target);
+
+  // 숫자를 전원의 판에 반영
   const players=row.players.map(function(p){
     const board=p.board.map(function(cell, idx){
       if(idx!==12 && cell.n===num && !cell.checked) return {n:cell.n, checked:true};
@@ -1760,16 +1763,22 @@ async function bingoPickNumber(num){
   const me=players.find(function(p){ return p.username===currentUser.username; });
   me.picks=(me.picks||0)+1;
 
-  const target=bingoTargetLines(row.bingo_target);
-  let newFinishedCount=row.finished_count||0;
-  let justCompleted=false;
-  if(!me.completed_at){
-    const lines=bingoCountLines(me.board);
-    if(lines>=target){
-      me.completed_at=new Date().toISOString();
-      newFinishedCount++;
-      justCompleted=true;
+  // 이번 픽으로 새로 완성된 전원을 찾음 (내 픽이 남의 판도 완성시킬 수 있음)
+  let newlyCompleted=[];
+  players.forEach(function(p){
+    if(!p.completed_at){
+      const lines=bingoCountLines(p.board);
+      if(lines>=target) newlyCompleted.push(p);
     }
+  });
+
+  // 새로 완성된 전원에게 같은 순위(공동 순위) 부여: 이전까지 완료한 인원 수 + 1
+  let newFinishedCount=row.finished_count||0;
+  if(newlyCompleted.length>0){
+    const rank=newFinishedCount+1;
+    const nowIso=new Date().toISOString();
+    newlyCompleted.forEach(function(p){ p.completed_at=nowIso; p.rank=rank; });
+    newFinishedCount+=newlyCompleted.length;
   }
 
   const calledNumbers=(row.called_numbers||[]).concat([{number:num, by:currentUser.username}]);
@@ -1786,43 +1795,9 @@ async function bingoPickNumber(num){
   }
   if(!foundNext) nextIdx=row.current_turn_index;
 
-  // 전원 완료 체크 → 순위 부여 및 종료
   const allDone=players.every(function(p){ return p.completed_at; });
   let update={players:players, called_numbers:calledNumbers, last_call:{number:num,by:currentUser.username}, current_turn_index:nextIdx, finished_count:newFinishedCount};
-
-  if(allDone){
-    // completed_at 시간 순으로 정렬해서 표준경쟁순위 부여
-    const doneOrder=players.slice().sort(function(a,b){ return new Date(a.completed_at)-new Date(b.completed_at); });
-    let rank=1;
-    for(let i=0;i<doneOrder.length;i++){
-      if(i>0 && doneOrder[i].completed_at===doneOrder[i-1].completed_at){
-        // 동시 완료(사실상 거의 없음) - 이전과 동일 순위
-        doneOrder[i].rank=doneOrder[i-1].rank;
-      } else {
-        doneOrder[i].rank=i+1;
-      }
-    }
-    // players 배열에 rank 반영 (username 매칭)
-    const rankMap={}; doneOrder.forEach(function(p){ rankMap[p.username]=p.rank; });
-    players.forEach(function(p){ p.rank=rankMap[p.username]; });
-    update.players=players;
-    update.status='finished';
-  } else if(justCompleted){
-    // 방금 완료한 사람에게 순위 부여 (완료 순서 기준, 동시 완료 고려)
-    const doneNow=players.filter(function(p){ return p.completed_at; });
-    const doneOrder=doneNow.slice().sort(function(a,b){ return new Date(a.completed_at)-new Date(b.completed_at); });
-    let rank=1;
-    for(let i=0;i<doneOrder.length;i++){
-      if(i>0 && doneOrder[i].completed_at===doneOrder[i-1].completed_at){
-        doneOrder[i].rank=doneOrder[i-1].rank;
-      } else {
-        doneOrder[i].rank=i+1;
-      }
-    }
-    const rankMap={}; doneOrder.forEach(function(p){ rankMap[p.username]=p.rank; });
-    players.forEach(function(p){ if(p.completed_at) p.rank=rankMap[p.username]; });
-    update.players=players;
-  }
+  if(allDone) update.status='finished';
 
   await supa.from('bingo_games').update(update).eq('room_code',bingoRoomCode);
 }
