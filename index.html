@@ -555,6 +555,11 @@ button:disabled { opacity:0.4; cursor:default; }
 
     <div id="bingoMyStatus" style="text-align:center; font-size:13px; color:#999; margin-bottom:8px;"></div>
 
+    <div id="bingoLiveRankArea" class="hidden" style="margin-bottom:8px;">
+      <p style="font-size:12px; color:#999; margin:0 0 4px;">완성 순위</p>
+      <div id="bingoLiveRankList"></div>
+    </div>
+
     <div id="bingoOtherBoardsToggle" class="hidden" style="margin-bottom:8px;">
       <button id="bingoShowOthersBtn" style="width:100%; font-size:13px;">다른 사람 진행 상황 보기</button>
     </div>
@@ -1655,6 +1660,24 @@ function bingoRenderGame(row){
     document.getElementById('bingoMyStatus').textContent = me.completed_at ? ('완료! '+me.rank+'등') : ('현재 '+lines+'줄 / 목표 '+target+'줄');
   }
 
+  // 완성 순위 목록 (누구나 볼 수 있음, 남의 판 내용은 공개하지 않고 등수만)
+  const completedPlayers=players.filter(function(p){ return p.completed_at; });
+  const liveRankArea=document.getElementById('bingoLiveRankArea');
+  const liveRankList=document.getElementById('bingoLiveRankList');
+  if(completedPlayers.length>0){
+    liveRankArea.classList.remove('hidden');
+    liveRankList.innerHTML='';
+    const sortedLive=completedPlayers.slice().sort(function(a,b){ return (a.rank||999)-(b.rank||999); });
+    sortedLive.forEach(function(p){
+      const d=document.createElement('div'); d.className='bingoRankRow';
+      d.innerHTML='<span class="rank">'+p.rank+'등</span><span>'+p.username+(p.username===currentUser.username?' (나)':'')+'</span>';
+      liveRankList.appendChild(d);
+    });
+  } else {
+    liveRankArea.classList.add('hidden');
+    liveRankList.innerHTML='';
+  }
+
   // 완료하기 전에는 다른 사람 판을 볼 수 없음
   const toggleWrap=document.getElementById('bingoOtherBoardsToggle');
   if(me && me.completed_at){
@@ -1673,6 +1696,7 @@ function bingoRenderGame(row){
 
   // 최종 결과
   if(row.status==='finished'){
+    document.getElementById('bingoLiveRankArea').classList.add('hidden');
     document.getElementById('bingoFinalResult').classList.remove('hidden');
     const rankListEl=document.getElementById('bingoRankList');
     rankListEl.innerHTML='';
