@@ -1062,7 +1062,7 @@ document.getElementById('bBackHomeBtn').addEventListener('click',function(){ cle
 document.getElementById('bResumeBtn').addEventListener('click',function(){ bEnteredGame=false; enterBaseball(); bResumeGame(); });
 document.getElementById('bCreateBtn').addEventListener('click',function(){ bShowSub('bCreateCountScreen'); });
 document.getElementById('bCreateCountBackBtn').addEventListener('click',function(){ bShowSub('bRoleScreen'); });
-document.querySelectorAll('.countBtn').forEach(function(btn){ btn.addEventListener('click',function(){ bCreateGame(parseInt(btn.getAttribute('data-count'),10)); }); });
+document.querySelectorAll('.countBtn[data-count]').forEach(function(btn){ btn.addEventListener('click',function(){ bCreateGame(parseInt(btn.getAttribute('data-count'),10)); }); });
 document.getElementById('bJoinBtn').addEventListener('click',function(){ bShowSub('bJoinScreen'); });
 document.getElementById('bJoinBackBtn').addEventListener('click',function(){ bShowSub('bRoleScreen'); });
 document.getElementById('bJoinConfirmBtn').addEventListener('click',function(){ bJoinRoom(false); });
