@@ -131,6 +131,24 @@ button:disabled { opacity:0.4; cursor:default; }
 .grtScoreBox b { font-size:22px; display:block; }
 .scoreRow { display:flex; gap:12px; justify-content:center; margin-bottom:8px; font-size:14px; }
 .scoreBox { display:flex; align-items:center; gap:6px; background:#f5f5f3; padding:6px 12px; border-radius:8px; }
+/* 빙고 */
+.bingoGrid { display:inline-grid; grid-template-columns:repeat(5, min(56px, calc((100vw - 92px) / 5))); gap:4px; background:#f5f5f3; padding:8px; border-radius:8px; }
+.bingoCell { width:min(56px, calc((100vw - 92px) / 5)); height:min(56px, calc((100vw - 92px) / 5)); background:#fff; border:1.5px solid #d0d0cb; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; cursor:pointer; position:relative; transition:all 0.15s; }
+.bingoCell.free { background:#1a1a1a; color:#fff; cursor:default; font-size:12px; }
+.bingoCell.checked { background:#2563eb; color:#fff; border-color:#2563eb; cursor:default; }
+.bingoCell.checked.line { background:#2e7d32; border-color:#2e7d32; }
+.bingoCell.disabled { cursor:default; opacity:0.6; }
+.bingoBoardWrap { position:relative; margin-bottom:10px; }
+.bingoBoardWrap.completed { opacity:0.4; }
+.bingoRankBadge { position:absolute; top:-10px; right:-10px; background:#d4a017; color:#fff; font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+.bingoOtherBoardCard { border:1px solid #e0e0dc; border-radius:10px; padding:10px; margin-bottom:10px; }
+.bingoOtherBoardName { font-size:13px; font-weight:600; margin:0 0 6px; }
+.bingoMiniGrid { display:inline-grid; grid-template-columns:repeat(5, 20px); gap:2px; }
+.bingoMiniCell { width:20px; height:20px; border-radius:3px; background:#eee; }
+.bingoMiniCell.checked { background:#2563eb; }
+.bingoMiniCell.free { background:#1a1a1a; }
+.bingoRankRow { display:flex; align-items:center; justify-content:space-between; padding:8px 4px; border-bottom:1px solid #eee; font-size:14px; }
+.bingoRankRow .rank { font-weight:700; color:#d4a017; min-width:32px; }
 </style>
 </head>
 <body>
@@ -164,6 +182,7 @@ button:disabled { opacity:0.4; cursor:default; }
     <div class="gameCard" id="goOmokBtn"><div class="gameCardIcon">⚫</div><div class="gameCardInfo"><p class="gameCardTitle">오목</p><p class="gameCardDesc">15×15 렌주 룰 · 먼저 5개를 연속으로 놓으면 승리</p></div></div>
     <div class="gameCard" id="goOthelloBtn"><div class="gameCardIcon">🟢</div><div class="gameCardInfo"><p class="gameCardTitle">오델로</p><p class="gameCardDesc">8×8 · 상대 돌을 뒤집어 더 많이 차지하면 승리</p></div></div>
     <div class="gameCard" id="goGrtBtn"><div class="gameCardIcon">🀄</div><div class="gameCardInfo"><p class="gameCardTitle">흑과백</p><p class="gameCardDesc">9장의 타일로 펼치는 심리전 · 2인</p></div></div>
+    <div class="gameCard" id="goBingoBtn"><div class="gameCardIcon">🎱</div><div class="gameCardInfo"><p class="gameCardTitle">빙고</p><p class="gameCardDesc">5×5 판 · 2~10인 · 목표 빙고를 먼저 완성하세요</p></div></div>
   </div>
 </div>
 
@@ -467,6 +486,96 @@ button:disabled { opacity:0.4; cursor:default; }
   </div>
 </div>
 
+<!-- ===================== 빙고 ===================== -->
+<div id="bingoSection" class="hidden">
+  <div id="bingoLobby">
+    <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">빙고</h1><button id="bingoBackHomeBtn">홈으로</button></div>
+    <p class="subtitle">5×5 판 · 2~10인 · 목표 빙고를 먼저 완성하세요</p>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button id="bingoCreateOpenBtn" class="primary" style="padding:14px 16px; text-align:left;">방 만들기</button>
+      <button id="bingoJoinLobbyBtn" style="padding:14px 16px; text-align:left;">참가하기 (방 코드 입력)</button>
+    </div>
+  </div>
+
+  <div id="bingoCreateScreen" class="hidden">
+    <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">방 설정</h1><button id="bingoCreateBackBtn">뒤로</button></div>
+    <p class="subtitle" style="margin-bottom:6px;">빙고 기준</p>
+    <div class="countBtnRow" style="margin-bottom:16px;">
+      <button class="countBtn bingoTargetBtn" data-target="3">3빙고</button>
+      <button class="countBtn bingoTargetBtn" data-target="5">5빙고</button>
+      <button class="countBtn bingoTargetBtn" data-target="full">풀빙고</button>
+    </div>
+    <p class="subtitle" style="margin-bottom:6px;">숫자 범위</p>
+    <div class="countBtnRow" style="margin-bottom:16px;">
+      <button class="countBtn bingoRangeBtn" data-range="25">1~25</button>
+      <button class="countBtn bingoRangeBtn" data-range="50">1~50</button>
+      <button class="countBtn bingoRangeBtn" data-range="99">1~99</button>
+    </div>
+    <p class="subtitle" style="margin-bottom:6px;">최대 인원</p>
+    <div class="countBtnRow" style="margin-bottom:8px; flex-wrap:wrap;">
+      <button class="countBtn bingoMaxBtn" data-max="2">2명</button>
+      <button class="countBtn bingoMaxBtn" data-max="3">3명</button>
+      <button class="countBtn bingoMaxBtn" data-max="4">4명</button>
+      <button class="countBtn bingoMaxBtn" data-max="5">5명</button>
+      <button class="countBtn bingoMaxBtn" data-max="6">6명</button>
+    </div>
+    <div class="countBtnRow" style="margin-bottom:16px; flex-wrap:wrap;">
+      <button class="countBtn bingoMaxBtn" data-max="7">7명</button>
+      <button class="countBtn bingoMaxBtn" data-max="8">8명</button>
+      <button class="countBtn bingoMaxBtn" data-max="9">9명</button>
+      <button class="countBtn bingoMaxBtn" data-max="10">10명</button>
+    </div>
+    <p class="errMsg" id="bingoCreateErr"></p>
+    <button id="bingoCreateConfirmBtn" class="primary" style="width:100%;">방 만들기</button>
+  </div>
+
+  <div id="bingoJoinScreen" class="hidden">
+    <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">빙고 참가</h1><button id="bingoJoinBackBtn">뒤로</button></div>
+    <input id="bingoJoinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" style="width:100%; margin-bottom:8px; letter-spacing:6px;" />
+    <p class="errMsg" id="bingoJoinErr"></p>
+    <button id="bingoJoinConfirmBtn" class="primary" style="width:100%;">참가하기</button>
+  </div>
+
+  <div id="bingoLobbyScreen" class="hidden">
+    <div class="header-row" style="margin-bottom:12px;"><h1 style="margin:0;">대기실</h1><button id="bingoLobbyLeaveBtn">나가기</button></div>
+    <div class="roomCodeBox"><p class="roomCodeLabel">방 코드</p><p id="bingoLobbyCode" class="roomCodeValue">----</p></div>
+    <div class="infoBox">기준: <span id="bingoLobbyTarget">-</span> · 범위: 1~<span id="bingoLobbyRange">-</span> · <span id="bingoLobbyCount">0</span> / <span id="bingoLobbyMax">0</span> 명 입장</div>
+    <div id="bingoLobbyPlayerList" style="margin-bottom:16px;"></div>
+    <p style="font-size:13px; color:#999; text-align:center;">인원이 다 차면 자동으로 시작돼요</p>
+  </div>
+
+  <div id="bingoGameScreen" class="hidden">
+    <div class="header-row" style="margin-bottom:8px;">
+      <p style="margin:0; font-size:13px; color:#6b6b66;">방: <b id="bingoGameCode">----</b> · <span id="bingoGameTargetLabel"></span></p>
+      <button id="bingoGameLeaveBtn">나가기</button>
+    </div>
+    <div id="bingoTurnBanner" class="turnBanner">연결 중...</div>
+    <div class="boardWrap"><div id="bingoBoard" class="bingoGrid"></div></div>
+    <div class="infoBox" id="bingoLastCallBox" style="text-align:center;">아직 아무도 선택하지 않았어요</div>
+
+    <div id="bingoMyStatus" style="text-align:center; font-size:13px; color:#999; margin-bottom:8px;"></div>
+
+    <div id="bingoOtherBoardsToggle" style="margin-bottom:8px;">
+      <button id="bingoShowOthersBtn" style="width:100%; font-size:13px;">다른 사람 진행 상황 보기</button>
+    </div>
+    <div id="bingoOtherBoards" class="hidden"></div>
+
+    <div id="bingoFinalResult" class="hidden" style="margin-top:12px;">
+      <div class="resultBox winBox" style="display:block;">
+        <p class="title">🏆 최종 순위</p>
+        <div id="bingoRankList" style="margin-top:10px; text-align:left;"></div>
+      </div>
+      <button id="bingoBackToLobbyBtn" class="primary" style="width:100%; margin-top:12px;">처음으로</button>
+    </div>
+
+    <div class="chatBox">
+      <div class="chatHeader">채팅</div>
+      <div id="bingoChatList" class="chatList"></div>
+      <div class="chatInputRow"><input id="bingoChatInput" type="text" maxlength="200" placeholder="메시지 입력" /><button id="bingoChatSendBtn">전송</button></div>
+    </div>
+  </div>
+</div>
+
 </div>
 <script>
 const SUPABASE_URL='https://phyzusbvjkgwuupunwma.supabase.co';
@@ -480,7 +589,7 @@ function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=M
 function saveUser(){ localStorage.setItem('nb_user',JSON.stringify(currentUser)); }
 function clearAllChannels(){ activeChannels.forEach(function(c){ try{ supa.removeChannel(c); }catch(e){} }); activeChannels=[]; }
 function addChannel(c){ activeChannels.push(c); return c; }
-const SECTIONS=['loginScreen','homeScreen','leaderboardScreen','baseballSection','omokSection','othelloSection','grtSection'];
+const SECTIONS=['loginScreen','homeScreen','leaderboardScreen','baseballSection','omokSection','othelloSection','grtSection','bingoSection'];
 function showSection(id){ SECTIONS.forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); }); }
 
 /* ===== 로그인 ===== */
@@ -881,6 +990,13 @@ async function tryAutoLogin(){
           if(data.status==='waiting') bEnterLobby();
           else { bEnteredGame=true; bEnterGame(); }
           return;
+        }
+        clearGameSession();
+      } else if(session.type==='bingo'){
+        const {data}=await supa.from('bingo_games').select('*').eq('room_code',session.roomCode).maybeSingle();
+        if(data&&data.status!=='waiting'){
+          bingoRoomCode=session.roomCode;
+          showSection('bingoSection'); bingoSubscribeGame(); bingoEnterGame(data); return;
         }
         clearGameSession();
       } else if(session.type==='grt'){
@@ -1328,6 +1444,393 @@ document.getElementById('grtChatSendBtn').addEventListener('click',grtSendChat);
 document.getElementById('grtChatInput').addEventListener('keydown',function(e){ if(e.key==='Enter') grtSendChat(); });
 /* 랭킹 흑과백 탭 */
 document.getElementById('tabGameGrt').addEventListener('click',function(){ lbGame='grt'; updateLbTabs(); loadLeaderboard(); });
+/* ===== 빙고 ===== */
+let bingoRoomCode='', bingoMyUsername='', bingoChannel=null, bingoChatChannel=null, bingoCurrentRow=null;
+let bingoCreateTarget='3', bingoCreateRange=25, bingoCreateMax=6;
+
+function bingoShowSub(id){ ['bingoLobby','bingoCreateScreen','bingoJoinScreen','bingoLobbyScreen','bingoGameScreen'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden',s!==id); }); }
+function enterBingo(){ showSection('bingoSection'); bingoShowSub('bingoLobby'); }
+
+function bingoTargetLabel(t){ return t==='full' ? '풀빙고' : (t+'빙고'); }
+
+function bingoGenerateBoard(range){
+  // range 안에서 24개 무작위 추출, 5x5 배치 (중앙 인덱스 12는 null=free)
+  const pool=[]; for(let i=1;i<=range;i++) pool.push(i);
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const nums=pool.slice(0,24);
+  const cells=[];
+  let ni=0;
+  for(let i=0;i<25;i++){
+    if(i===12){ cells.push({n:null, checked:true}); }
+    else { cells.push({n:nums[ni], checked:false}); ni++; }
+  }
+  return cells;
+}
+
+function bingoCountLines(cells){
+  // 5x5, index = row*5+col
+  const isChecked=function(r,c){ return cells[r*5+c].checked; };
+  let lines=0;
+  for(let r=0;r<5;r++){ let all=true; for(let c=0;c<5;c++) if(!isChecked(r,c)){ all=false; break; } if(all) lines++; }
+  for(let c=0;c<5;c++){ let all=true; for(let r=0;r<5;r++) if(!isChecked(r,c)){ all=false; break; } if(all) lines++; }
+  let d1=true; for(let i=0;i<5;i++) if(!isChecked(i,i)){ d1=false; break; } if(d1) lines++;
+  let d2=true; for(let i=0;i<5;i++) if(!isChecked(i,4-i)){ d2=false; break; } if(d2) lines++;
+  return lines;
+}
+
+function bingoIsLineCell(cells, idx){
+  const r=Math.floor(idx/5), c=idx%5;
+  const isChecked=function(rr,cc){ return cells[rr*5+cc].checked; };
+  let rowAll=true; for(let cc=0;cc<5;cc++) if(!isChecked(r,cc)){ rowAll=false; break; }
+  if(rowAll) return true;
+  let colAll=true; for(let rr=0;rr<5;rr++) if(!isChecked(rr,c)){ colAll=false; break; }
+  if(colAll) return true;
+  if(r===c){ let d=true; for(let i=0;i<5;i++) if(!isChecked(i,i)){ d=false; break; } if(d) return true; }
+  if(r+c===4){ let d=true; for(let i=0;i<5;i++) if(!isChecked(i,4-i)){ d=false; break; } if(d) return true; }
+  return false;
+}
+
+function bingoTargetLines(target){
+  if(target==='full') return 12; // 5+5+2
+  return parseInt(target,10);
+}
+
+async function bingoCreate(){
+  for(let i=0;i<5;i++){
+    const code=genCode();
+    const board=bingoGenerateBoard(bingoCreateRange);
+    const players=[{username:currentUser.username, board:board, completed_at:null, rank:null, picks:0}];
+    const {error}=await supa.from('bingo_games').insert({
+      room_code:code, status:'waiting', max_players:bingoCreateMax, bingo_target:bingoCreateTarget,
+      number_range:bingoCreateRange, players:players, turn_order:[], current_turn_index:0,
+      called_numbers:[], last_call:null, finished_count:0
+    });
+    if(!error){ bingoRoomCode=code; document.getElementById('bingoLobbyCode').textContent=code; bingoShowSub('bingoLobbyScreen'); bingoSubscribeGame(); return; }
+  }
+  document.getElementById('bingoCreateErr').textContent='방 생성 실패. 다시 시도해주세요';
+}
+
+async function bingoJoin(){
+  const code=document.getElementById('bingoJoinCode').value.trim();
+  const err=document.getElementById('bingoJoinErr');
+  if(!/^\d{4}$/.test(code)){ err.textContent='4자리 방 코드를 입력하세요'; return; }
+  const {data,error}=await supa.from('bingo_games').select('*').eq('room_code',code).maybeSingle();
+  if(error||!data){ err.textContent='방을 찾을 수 없어요'; return; }
+  const alreadyIn=(data.players||[]).some(function(p){ return p.username===currentUser.username; });
+  if(alreadyIn){
+    bingoRoomCode=code; bingoSubscribeGame();
+    if(data.status==='waiting'){ document.getElementById('bingoLobbyCode').textContent=code; bingoShowSub('bingoLobbyScreen'); bingoRenderLobby(data); }
+    else bingoEnterGame(data);
+    return;
+  }
+  if(data.status!=='waiting'){ err.textContent='이미 시작된 게임이에요'; return; }
+  if((data.players||[]).length>=data.max_players){ err.textContent='방이 가득 찼어요'; return; }
+  err.textContent='';
+  const board=bingoGenerateBoard(data.number_range);
+  const newPlayers=(data.players||[]).concat([{username:currentUser.username, board:board, completed_at:null, rank:null, picks:0}]);
+  await supa.from('bingo_games').update({players:newPlayers}).eq('room_code',code);
+  bingoRoomCode=code; bingoSubscribeGame();
+  document.getElementById('bingoLobbyCode').textContent=code; bingoShowSub('bingoLobbyScreen');
+}
+
+function bingoSubscribeGame(){
+  if(bingoChannel) supa.removeChannel(bingoChannel);
+  bingoChannel=addChannel(supa.channel('bingo-'+bingoRoomCode).on('postgres_changes',{event:'*',schema:'public',table:'bingo_games',filter:'room_code=eq.'+bingoRoomCode},function(p){ bingoHandleUpdate(p.new); }).subscribe());
+}
+
+async function bingoHandleUpdate(row){
+  bingoCurrentRow=row;
+  if(row.status==='waiting'){
+    bingoRenderLobby(row);
+    const creator=(row.players||[])[0];
+    if(creator&&creator.username===currentUser.username&&(row.players||[]).length===row.max_players){
+      await bingoStartGame(row);
+    }
+    return;
+  }
+  if(document.getElementById('bingoGameScreen').classList.contains('hidden')){
+    bingoEnterGame(row);
+  } else {
+    bingoRenderGame(row);
+  }
+}
+
+function bingoRenderLobby(row){
+  document.getElementById('bingoLobbyTarget').textContent=bingoTargetLabel(row.bingo_target);
+  document.getElementById('bingoLobbyRange').textContent=row.number_range;
+  document.getElementById('bingoLobbyCount').textContent=(row.players||[]).length;
+  document.getElementById('bingoLobbyMax').textContent=row.max_players;
+  const listEl=document.getElementById('bingoLobbyPlayerList'); listEl.innerHTML='';
+  (row.players||[]).forEach(function(p,idx){ const d=document.createElement('div'); d.className='playerRow'; d.innerHTML='<span>'+p.username+'</span>'+(idx===0?'<span class="playerBadge">방장</span>':''); listEl.appendChild(d); });
+}
+
+async function bingoStartGame(row){
+  const usernames=row.players.map(function(p){ return p.username; });
+  const order=shuffle(usernames);
+  await supa.from('bingo_games').update({status:'active', turn_order:order, current_turn_index:0}).eq('room_code',bingoRoomCode);
+}
+
+function bingoEnterGame(row){
+  bingoCurrentRow=row;
+  document.getElementById('bingoGameCode').textContent=bingoRoomCode;
+  document.getElementById('bingoGameTargetLabel').textContent=bingoTargetLabel(row.bingo_target)+' · 1~'+row.number_range;
+  saveGameSession('bingo',bingoRoomCode,'');
+  bingoShowSub('bingoGameScreen');
+  bingoRenderGame(row);
+  bingoLoadChat(); bingoSubscribeChat();
+}
+
+function bingoRenderGame(row){
+  const players=row.players||[];
+  const me=players.find(function(p){ return p.username===currentUser.username; });
+  const target=bingoTargetLines(row.bingo_target);
+
+  // 턴 배너
+  if(row.status==='finished'){
+    document.getElementById('bingoTurnBanner').textContent='게임 종료!';
+  } else {
+    const activeOrder=(row.turn_order||[]).filter(function(u){
+      const p=players.find(function(pp){ return pp.username===u; });
+      return p && !p.completed_at;
+    });
+    if(activeOrder.length===0){
+      document.getElementById('bingoTurnBanner').textContent='진행 중...';
+    } else {
+      const turnUser=row.turn_order[row.current_turn_index % row.turn_order.length];
+      const turnPlayer=players.find(function(p){ return p.username===turnUser; });
+      if(turnPlayer && turnPlayer.completed_at){
+        // 완료한 사람 차례면 서버에서 넘겨야 하지만 클라단에서도 스킵 표시
+        document.getElementById('bingoTurnBanner').textContent='다음 차례 확인 중...';
+      } else if(turnUser===currentUser.username){
+        document.getElementById('bingoTurnBanner').textContent='내 차례예요! 숫자를 선택하세요';
+      } else {
+        document.getElementById('bingoTurnBanner').textContent=turnUser+'님의 차례입니다';
+      }
+    }
+  }
+
+  // 내 보드
+  const boardEl=document.getElementById('bingoBoard');
+  boardEl.innerHTML='';
+  const activeOrder2=(row.turn_order||[]);
+  const turnUser2=row.status==='active' ? activeOrder2[row.current_turn_index % (activeOrder2.length||1)] : null;
+  const isMyTurn = row.status==='active' && turnUser2===currentUser.username && me && !me.completed_at;
+
+  if(me){
+    const wrap=document.getElementById('bingoBoard').parentElement;
+    wrap.classList.toggle('completed', !!me.completed_at);
+    // rank badge
+    let badge=wrap.querySelector('.bingoRankBadge');
+    if(me.completed_at){
+      if(!badge){ badge=document.createElement('div'); badge.className='bingoRankBadge'; wrap.appendChild(badge); }
+      badge.textContent=me.rank+'등 완료';
+    } else if(badge){ badge.remove(); }
+
+    me.board.forEach(function(cell, idx){
+      const cellEl=document.createElement('div');
+      cellEl.className='bingoCell';
+      if(idx===12){ cellEl.classList.add('free'); cellEl.textContent='FREE'; }
+      else {
+        cellEl.textContent=cell.n;
+        if(cell.checked){
+          cellEl.classList.add('checked');
+          if(bingoIsLineCell(me.board, idx)) cellEl.classList.add('line');
+        } else if(isMyTurn){
+          cellEl.addEventListener('click',function(){ bingoPickNumber(cell.n); });
+        } else {
+          cellEl.classList.add('disabled');
+        }
+      }
+      boardEl.appendChild(cellEl);
+    });
+  }
+
+  // 내 상태
+  if(me){
+    const lines=bingoCountLines(me.board);
+    document.getElementById('bingoMyStatus').textContent = me.completed_at ? ('완료! '+me.rank+'등') : ('현재 '+lines+'줄 / 목표 '+target+'줄');
+  }
+
+  // 마지막 선택 로그
+  const calls=row.called_numbers||[];
+  const lc=calls[calls.length-1];
+  document.getElementById('bingoLastCallBox').textContent = lc ? (lc.by+'님이 '+lc.number+'을(를) 선택했어요') : '아직 아무도 선택하지 않았어요';
+
+  // 최종 결과
+  if(row.status==='finished'){
+    document.getElementById('bingoFinalResult').classList.remove('hidden');
+    const rankListEl=document.getElementById('bingoRankList');
+    rankListEl.innerHTML='';
+    const sorted=players.slice().sort(function(a,b){ return (a.rank||999)-(b.rank||999); });
+    sorted.forEach(function(p){
+      const d=document.createElement('div'); d.className='bingoRankRow';
+      d.innerHTML='<span class="rank">'+p.rank+'등</span><span>'+p.username+(p.username===currentUser.username?' (나)':'')+'</span>';
+      rankListEl.appendChild(d);
+    });
+  } else {
+    document.getElementById('bingoFinalResult').classList.add('hidden');
+  }
+
+  // 다른 사람 보드 (토글되어 있으면 갱신)
+  if(!document.getElementById('bingoOtherBoards').classList.contains('hidden')){
+    bingoRenderOtherBoards(row);
+  }
+}
+
+function bingoRenderOtherBoards(row){
+  const container=document.getElementById('bingoOtherBoards');
+  container.innerHTML='';
+  (row.players||[]).forEach(function(p){
+    if(p.username===currentUser.username) return;
+    const card=document.createElement('div'); card.className='bingoOtherBoardCard';
+    const lines=bingoCountLines(p.board);
+    const target=bingoTargetLines(row.bingo_target);
+    const nameEl=document.createElement('p'); nameEl.className='bingoOtherBoardName';
+    nameEl.textContent=p.username+' · '+(p.completed_at?(p.rank+'등 완료'):(lines+'줄 / '+target+'줄'));
+    card.appendChild(nameEl);
+    const grid=document.createElement('div'); grid.className='bingoMiniGrid';
+    p.board.forEach(function(cell, idx){
+      const mc=document.createElement('div'); mc.className='bingoMiniCell';
+      if(idx===12) mc.classList.add('free');
+      else if(cell.checked) mc.classList.add('checked');
+      grid.appendChild(mc);
+    });
+    card.appendChild(grid);
+    container.appendChild(card);
+  });
+}
+
+async function bingoPickNumber(num){
+  const {data:row}=await supa.from('bingo_games').select('*').eq('room_code',bingoRoomCode).single();
+  if(!row || row.status!=='active') return;
+  const turnUser=row.turn_order[row.current_turn_index % row.turn_order.length];
+  if(turnUser!==currentUser.username) return;
+
+  const players=row.players.map(function(p){
+    const board=p.board.map(function(cell, idx){
+      if(idx!==12 && cell.n===num && !cell.checked) return {n:cell.n, checked:true};
+      return cell;
+    });
+    return Object.assign({}, p, {board:board});
+  });
+
+  const me=players.find(function(p){ return p.username===currentUser.username; });
+  me.picks=(me.picks||0)+1;
+
+  const target=bingoTargetLines(row.bingo_target);
+  let newFinishedCount=row.finished_count||0;
+  let justCompleted=false;
+  if(!me.completed_at){
+    const lines=bingoCountLines(me.board);
+    if(lines>=target){
+      me.completed_at=new Date().toISOString();
+      newFinishedCount++;
+      justCompleted=true;
+    }
+  }
+
+  const calledNumbers=(row.called_numbers||[]).concat([{number:num, by:currentUser.username}]);
+
+  // 다음 턴 계산: 완료 안 한 사람 중 다음
+  let nextIdx=row.current_turn_index;
+  const order=row.turn_order;
+  for(let i=1;i<=order.length;i++){
+    const idx=(row.current_turn_index+i)%order.length;
+    const u=order[idx];
+    const p=players.find(function(pp){ return pp.username===u; });
+    if(p && !p.completed_at){ nextIdx=idx; break; }
+  }
+
+  // 전원 완료 체크 → 순위 부여 및 종료
+  const allDone=players.every(function(p){ return p.completed_at; });
+  let update={players:players, called_numbers:calledNumbers, last_call:{number:num,by:currentUser.username}, current_turn_index:nextIdx, finished_count:newFinishedCount};
+
+  if(allDone){
+    // completed_at 시간 순으로 정렬해서 표준경쟁순위 부여
+    const doneOrder=players.slice().sort(function(a,b){ return new Date(a.completed_at)-new Date(b.completed_at); });
+    let rank=1;
+    for(let i=0;i<doneOrder.length;i++){
+      if(i>0 && doneOrder[i].completed_at===doneOrder[i-1].completed_at){
+        // 동시 완료(사실상 거의 없음) - 이전과 동일 순위
+        doneOrder[i].rank=doneOrder[i-1].rank;
+      } else {
+        doneOrder[i].rank=i+1;
+      }
+    }
+    // players 배열에 rank 반영 (username 매칭)
+    const rankMap={}; doneOrder.forEach(function(p){ rankMap[p.username]=p.rank; });
+    players.forEach(function(p){ p.rank=rankMap[p.username]; });
+    update.players=players;
+    update.status='finished';
+  } else if(justCompleted){
+    // 방금 완료한 사람에게 순위 부여 (완료 순서 기준, 동시 완료 고려)
+    const doneNow=players.filter(function(p){ return p.completed_at; });
+    const doneOrder=doneNow.slice().sort(function(a,b){ return new Date(a.completed_at)-new Date(b.completed_at); });
+    let rank=1;
+    for(let i=0;i<doneOrder.length;i++){
+      if(i>0 && doneOrder[i].completed_at===doneOrder[i-1].completed_at){
+        doneOrder[i].rank=doneOrder[i-1].rank;
+      } else {
+        doneOrder[i].rank=i+1;
+      }
+    }
+    const rankMap={}; doneOrder.forEach(function(p){ rankMap[p.username]=p.rank; });
+    players.forEach(function(p){ if(p.completed_at) p.rank=rankMap[p.username]; });
+    update.players=players;
+  }
+
+  await supa.from('bingo_games').update(update).eq('room_code',bingoRoomCode);
+}
+
+function bingoLeave(){
+  if(bingoChannel){ supa.removeChannel(bingoChannel); bingoChannel=null; }
+  if(bingoChatChannel){ supa.removeChannel(bingoChatChannel); bingoChatChannel=null; }
+  clearGameSession();
+  bingoRoomCode=''; bingoCurrentRow=null;
+  document.getElementById('bingoOtherBoards').classList.add('hidden');
+  document.getElementById('bingoOtherBoards').innerHTML='';
+  enterBingo();
+}
+
+function bingoSubscribeChat(){ if(bingoChatChannel) supa.removeChannel(bingoChatChannel); bingoChatChannel=addChannel(supa.channel('bingo-chat-'+bingoRoomCode).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_code=eq.'+bingoRoomCode},function(p){ bingoAppendChat(p.new); }).subscribe()); }
+async function bingoLoadChat(){ const {data}=await supa.from('messages').select('*').eq('room_code',bingoRoomCode).order('created_at',{ascending:true}).limit(100); const el=document.getElementById('bingoChatList'); el.innerHTML=''; (data||[]).forEach(function(m){ bingoRenderChatMsg(m); }); el.scrollTop=el.scrollHeight; }
+function bingoAppendChat(m){ bingoRenderChatMsg(m); const el=document.getElementById('bingoChatList'); el.scrollTop=el.scrollHeight; }
+function bingoRenderChatMsg(m){ const el=document.getElementById('bingoChatList'); const isMe=m.sender===currentUser.username; const w=document.createElement('div'); w.className='chatMsg '+(isMe?'me':'other'); if(!isMe){ const s=document.createElement('div'); s.className='chatMsgSender'; s.textContent=m.sender; w.appendChild(s); } const t=document.createElement('div'); t.textContent=m.text; w.appendChild(t); el.appendChild(w); }
+async function bingoSendChat(){ const inp=document.getElementById('bingoChatInput'); const txt=inp.value.trim(); if(!txt) return; inp.value=''; await supa.from('messages').insert({room_code:bingoRoomCode,sender:currentUser.username,text:txt}); }
+
+/* 빙고 이벤트 바인딩 */
+document.getElementById('goBingoBtn').addEventListener('click',function(){ clearAllChannels(); enterBingo(); });
+document.getElementById('bingoBackHomeBtn').addEventListener('click',function(){ clearAllChannels(); enterHome(); });
+document.getElementById('bingoCreateOpenBtn').addEventListener('click',function(){
+  bingoCreateTarget='3'; bingoCreateRange=25; bingoCreateMax=6;
+  document.querySelectorAll('.bingoTargetBtn').forEach(function(b){ b.classList.toggle('primary', b.getAttribute('data-target')===bingoCreateTarget); });
+  document.querySelectorAll('.bingoRangeBtn').forEach(function(b){ b.classList.toggle('primary', b.getAttribute('data-range')===String(bingoCreateRange)); });
+  document.querySelectorAll('.bingoMaxBtn').forEach(function(b){ b.classList.toggle('primary', b.getAttribute('data-max')===String(bingoCreateMax)); });
+  bingoShowSub('bingoCreateScreen');
+});
+document.getElementById('bingoCreateBackBtn').addEventListener('click',function(){ bingoShowSub('bingoLobby'); });
+document.querySelectorAll('.bingoTargetBtn').forEach(function(btn){ btn.addEventListener('click',function(){ bingoCreateTarget=btn.getAttribute('data-target'); document.querySelectorAll('.bingoTargetBtn').forEach(function(b){ b.classList.toggle('primary', b===btn); }); }); });
+document.querySelectorAll('.bingoRangeBtn').forEach(function(btn){ btn.addEventListener('click',function(){ bingoCreateRange=parseInt(btn.getAttribute('data-range'),10); document.querySelectorAll('.bingoRangeBtn').forEach(function(b){ b.classList.toggle('primary', b===btn); }); }); });
+document.querySelectorAll('.bingoMaxBtn').forEach(function(btn){ btn.addEventListener('click',function(){ bingoCreateMax=parseInt(btn.getAttribute('data-max'),10); document.querySelectorAll('.bingoMaxBtn').forEach(function(b){ b.classList.toggle('primary', b===btn); }); }); });
+document.getElementById('bingoCreateConfirmBtn').addEventListener('click',bingoCreate);
+document.getElementById('bingoJoinLobbyBtn').addEventListener('click',function(){ bingoShowSub('bingoJoinScreen'); });
+document.getElementById('bingoJoinBackBtn').addEventListener('click',function(){ bingoShowSub('bingoLobby'); });
+document.getElementById('bingoJoinConfirmBtn').addEventListener('click',bingoJoin);
+document.getElementById('bingoJoinCode').addEventListener('keydown',function(e){ if(e.key==='Enter') bingoJoin(); });
+document.getElementById('bingoJoinCode').addEventListener('input',function(e){ e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4); });
+document.getElementById('bingoLobbyLeaveBtn').addEventListener('click',bingoLeave);
+document.getElementById('bingoGameLeaveBtn').addEventListener('click',bingoLeave);
+document.getElementById('bingoBackToLobbyBtn').addEventListener('click',bingoLeave);
+document.getElementById('bingoShowOthersBtn').addEventListener('click',function(){
+  const el=document.getElementById('bingoOtherBoards');
+  const willShow=el.classList.contains('hidden');
+  el.classList.toggle('hidden');
+  document.getElementById('bingoShowOthersBtn').textContent = willShow ? '다른 사람 진행 상황 숨기기' : '다른 사람 진행 상황 보기';
+  if(willShow && bingoCurrentRow) bingoRenderOtherBoards(bingoCurrentRow);
+});
+document.getElementById('bingoChatSendBtn').addEventListener('click',bingoSendChat);
+document.getElementById('bingoChatInput').addEventListener('keydown',function(e){ if(e.key==='Enter') bingoSendChat(); });
+
 </script>
 </body>
 </html>
